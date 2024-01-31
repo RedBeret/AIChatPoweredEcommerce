@@ -1,4 +1,4 @@
-aiohttp==3.9.1
+aiohttp==3.9.2
 aiosignal==1.3.1
 alembic==1.13.1
 aniso8601==9.0.1
@@ -22,7 +22,7 @@ exceptiongroup==1.2.0
 executing==2.0.1
 Faker==21.0.0
 filelock==3.12.4
-Flask==2.2.2
+Flask==2.2.5
 Flask-Bcrypt==1.0.1
 Flask-Cors==3.0.10
 flask-marshmallow==1.1.0
@@ -97,11 +97,11 @@ tomli==2.0.1
 traitlets==5.14.0
 typing_extensions==4.9.0
 tzdata==2023.3
-urllib3==2.0.6
+urllib3==2.0.7
 virtualenv==20.24.5
 wcwidth==0.2.12
 webencodings==0.5.1
-Werkzeug==2.2.2
+Werkzeug==2.3.8
 yapf==0.40.2
 yarl==1.9.4
 yfinance==0.2.31
