@@ -54,13 +54,15 @@ jspm_packages
 
 # Virtual env metadata
 .venv
-
+.env
 # pytest cache
 .pytest_cache
 __pycache__
-
+generate_secret_key.py
 # database
 *.db
 instance
 .vscode
 package-lock.json
+instance/
+db.sqlite3
