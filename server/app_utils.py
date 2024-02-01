@@ -160,18 +160,18 @@ def authenticate_user(username, password):
 
 
 # Application configuration
-def configure_app():
-    """
-    Configures the Flask app with database settings and secret key.
+# def configure_app():
+#     """
+#     Configures the Flask app with database settings and secret key.
 
-    Sets up the database URI and loads environment variables.
-    """
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATABASE = os.environ.get(
-        "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
-    )
-    load_dotenv()
-    app.secret_key = os.environ.get("SECRET_KEY")
+#     Sets up the database URI and loads environment variables.
+#     """
+#     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+#     DATABASE = os.environ.get(
+#         "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
+#     )
+#     load_dotenv()
+#     app.secret_key = os.environ.get("SECRET_KEY")
 
 
 # Database Utility Functions

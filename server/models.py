@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from config import bcrypt, db
-from server.utilities import (
+from app_utils import (
     normalize_price_input,
     validate_not_blank,
     validate_positive_number,
 )
+from config import bcrypt, db
 from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin
 
