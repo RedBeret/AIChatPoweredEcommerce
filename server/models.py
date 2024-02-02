@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from app_utils import (
@@ -110,16 +111,21 @@ class ProductColor(db.Model):
 class Order(db.Model, SerializerMixin):
     __tablename__ = "orders"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("user_auth.id"), nullable=False
-    )  # Make sure this matches your user table name
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    confirmation_num = db.Column(
+        db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
+    )
+    # ForeignKey to ShippingInfo
+    shipping_info_id = db.Column(
+        db.Integer, db.ForeignKey("shipping_info.id"), nullable=True
+    )
+    shipping_info = db.relationship("ShippingInfo")
+    # Relationship with UserAuth and OrderDetail
     order_details = db.relationship(
         "OrderDetail", back_populates="order", cascade="all, delete-orphan"
     )
     user = db.relationship("UserAuth", back_populates="orders")
-
-    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
 
 
 # OrderDetail model represents the details of an order.
