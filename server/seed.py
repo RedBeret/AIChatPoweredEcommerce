@@ -54,13 +54,16 @@ def seed_database():
 
         # Create fake data for Products
         product_ids = []  # Keep track of product IDs for later use
-        for _ in range(15):
+        for _ in range(1):
             product = Product(
-                name=fake.word(),
-                description=fake.text(),
-                price=random.randint(1000, 5000),  # Assuming price is in cents
-                image_path=fake.image_url(),
-                imageAlt=fake.sentence(),
+                name="Vision X Pro Max Ultra",
+                description="The Vision X Pro Max Ultra represents the pinnacle of smartphone technology, "
+                "boasting a transparent design that reveals the cutting-edge tech within. "
+                "Featuring a modular build for easy upgrades and repairs, "
+                "it sets a new standard for innovation and sustainability in the mobile industry.",
+                price=100000,  # Price in cents
+                image_path="server/static/img/visionxphone.png",
+                imageAlt="Vision X Pro Max Ultra",
             )
             db.session.add(product)
             db.session.flush()  # Flush to assign an ID to the product object
@@ -70,7 +73,7 @@ def seed_database():
 
         # Create fake data for Colors
         color_ids = []  # Keep track of color IDs for later use
-        colors = ["Red", "Green", "Blue", "Yellow", "Purple", "Orange"]
+        colors = ["Black", "Transparent"]
         for color_name in colors:
             color = Color(name=color_name)
             db.session.add(color)
