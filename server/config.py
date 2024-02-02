@@ -17,33 +17,34 @@ from sqlalchemy import MetaData
 # Load environment variables
 load_dotenv()
 
-# Instantiate app, set attributes
-app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "SQLALCHEMY_DATABASE_URI", "sqlite:///app.db"
-)
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "bcrypt_secret_key")
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "jwt_secret_key")
-app.json.compact = False
+def create_app():
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+        "SQLALCHEMY_DATABASE_URI", "sqlite:///app.db"
+    )
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "bcrypt_secret_key")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "jwt_secret_key")
+    app.json.compact = False
 
-# Define metadata, instantiate db
-metadata = MetaData(
-    naming_convention={
-        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    }
-)
-db = SQLAlchemy(app, metadata=metadata)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    return app
 
 
-ma = Marshmallow(app)
-migrate = Migrate(app, db)
-jwt = JWTManager(app)
-bcrypt = Bcrypt(app)
+def init_extensions(app):
+    # Define metadata, instantiate db
+    metadata = MetaData(
+        naming_convention={
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        }
+    )
+    # Initialize extensions
+    db = SQLAlchemy(app, metadata=metadata)
+    ma = Marshmallow(app)
+    migrate = Migrate(app, db)
+    jwt = JWTManager(app)
+    bcrypt = Bcrypt(app)
+    api = Api(app)
 
-# Instantiate REST API
-api = Api(app)
-
-# Instantiate CORS
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+    return db, ma, bcrypt, jwt, api

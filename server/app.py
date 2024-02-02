@@ -1,45 +1,21 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-
 import os
 
-from app_utils import confgure_app, configure_app, validate_not_blank, validate_type
-
 # Local imports
-from config import api, app, bcrypt, db, ma
-from dotenv import load_dotenv
+from config import create_app, init_extensions
 
-# Remote library imports
-from flask import (
-    Flask,
-    flash,
-    jsonify,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
-from flask_marshmallow import Marshmallow
+# from dotenv import load_dotenv
+from flask import make_response, request
+from flask_jwt_extended import create_access_token, jwt_required
 from flask_restful import Resource
-from marshmallow import Schema, fields, validate
-from models import ChatMessage, Color, Order, Product, User, UserAuth
-from sqlalchemy.exc import IntegrityError
+from marshmallow import fields, validate
+from models import ChatMessage, Color, Order, Product, ShippingInfo, UserAuth
 
-# Builds app, set attributes
-configure_app()
+
+app = create_app()
+db, ma, bcrypt, jwt, api = init_extensions(app)
 
 
 @app.route("/")
@@ -50,15 +26,15 @@ def index():
 # User Authentication Resource
 class UserAuthResource(Resource):
     def get(self):
-        return make_response([user.to_dict() for user in User.query.all()], 200)
+        return make_response([user.to_dict() for user in UserAuth.query.all()], 200)
 
     def post(self):
         user_data = request.get_json()
-        # Check if user already exists
+        # Checks if user already exists
         if UserAuth.query.filter_by(username=user_data["username"]).first():
             return make_response({"error": "Username already exists."}, 400)
 
-        # Create new user
+        # Creates a new user
         try:
             new_user = UserAuth(
                 username=user_data["username"],
@@ -165,10 +141,74 @@ class ShippingInfoResource(Resource):
 # Product Resource
 class ProductResource(Resource):
     @jwt_required()
-    def get(self, product_id):
+    def get(self, product_id=None):
+        if product_id:
+            product = Product.query.get(product_id)
+            if product:
+                return make_response(ProductSchema().dump(product), 200)
+            return make_response({"error": "Product not found"}, 404)
+        else:
+            products = Product.query.all()
+            return make_response(ProductSchema(many=True).dump(products), 200)
+
+    @jwt_required()
+    def post(self):
+        product_data = request.get_json()
+        new_product = Product(
+            name=product_data["name"],
+            description=product_data.get("description", ""),
+            price=product_data["price"],
+            image_path=product_data.get("image_path", ""),
+            imageAlt=product_data.get("imageAlt", ""),
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+        return make_response({"message": "Product created successfully"}, 201)
+
+    @jwt_required()
+    def patch(self, product_id):
+        product_data = request.get_json()
         product = Product.query.get(product_id)
-        # Logic to retrieve a product
-        pass
+        if not product:
+            return make_response({"error": "Product not found"}, 404)
+
+        product.name = product_data.get("name", product.name)
+        product.description = product_data.get("description", product.description)
+        product.price = product_data.get("price", product.price)
+        product.image_path = product_data.get("image_path", product.image_path)
+        product.imageAlt = product_data.get("imageAlt", product.imageAlt)
+
+        db.session.commit()
+        return make_response({"message": "Product updated successfully"}, 200)
+
+    @jwt_required()
+    def delete(self, product_id):
+        product = Product.query.get(product_id)
+        if not product:
+            return make_response({"error": "Product not found"}, 404)
+
+        db.session.delete(product)
+        db.session.commit()
+        return make_response({"message": "Product deleted successfully"}, 200)
+
+
+class UserAuthSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserAuth
+        load_instance = True
+        exclude = ("password_hash",)
+
+    password = fields.Str(
+        load_only=True, required=True, validate=validate.Length(min=6)
+    )
+
+
+# Product Schema
+class ProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Product
+        load_instance = True
 
 
 # Color Resource
@@ -176,7 +216,6 @@ class ColorResource(Resource):
     @jwt_required()
     def get(self, color_id):
         color = Color.query.get(color_id)
-        # Logic to retrieve a color
         pass
 
 
@@ -185,7 +224,6 @@ class ChatMessageResource(Resource):
     @jwt_required()
     def get(self, message_id):
         message = ChatMessage.query.get(message_id)
-        # Logic to retrieve a chat message
         pass
 
 
@@ -194,29 +232,18 @@ class OrderResource(Resource):
     @jwt_required()
     def get(self, order_id):
         order = Order.query.get(order_id)
-        # Logic to retrieve an order
         pass
 
 
-# Define other schemas (ProductSchema, ColorSchema, ChatMessageSchema) similar to UserSchema
-
-
-# Resources
-
-
-# Define other resources (ProductResource, ColorResource, ChatMessageResource) similar to UserListResource
-
 # Routing
 api.add_resource(UserLoginResource, "/login")
-api.add_resource(UserAuth, "/user_auth")
-api.add_resource(ProductResource, "/product/<int:product_id>")
+api.add_resource(UserAuthResource, "/user_auth")
+api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
+api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
 api.add_resource(ColorResource, "/color/<int:color_id>")
 api.add_resource(ChatMessageResource, "/chat_message/<int:message_id>")
 api.add_resource(OrderResource, "/order/<int:order_id>")
-api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
 
-# Add routes for other resources
 
 if __name__ == "__main__":
-    configure_app()
     app.run(port=5555, debug=True)
