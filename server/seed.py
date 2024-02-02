@@ -81,7 +81,7 @@ def seed_database():
 
         # Create fake data for ProductColor relationships
         for product_id in product_ids:
-            # Randomly assign colors to a product. For simplicity, each product gets one color.
+            # Randomly assign colors to a product.
             color_id = random.choice(color_ids)
             product_color = ProductColor(product_id=product_id, color_id=color_id)
             db.session.add(product_color)
@@ -108,15 +108,13 @@ def seed_database():
         for _ in range(5):
             order = Order(
                 user_id=random.choice(user_ids),
-                shipping_info_id=random.choice(
-                    user_ids
-                ),  # Assuming one shipping info per user for simplicity
+                shipping_info_id=random.choice(user_ids),
                 confirmation_num=str(uuid.uuid4()),
             )
             db.session.add(order)
-            db.session.flush()  # Flush to assign an ID to the order object
+            db.session.flush()
 
-            for _ in range(random.randint(1, 5)):  # Each order has 1-5 order details
+            for _ in range(random.randint(1, 5)):
                 order_detail = OrderDetail(
                     order_id=order.id,
                     product_id=random.choice(product_ids),
@@ -152,7 +150,7 @@ def seed_database():
 
         # Create fake data for AITrainingData
         for _ in range(10):
-            ai_data = AITrainingData(data=fake.text(max_nb_chars=200))  # Sample AI data
+            ai_data = AITrainingData(data=fake.text(max_nb_chars=200))
             db.session.add(ai_data)
 
         db.session.commit()
