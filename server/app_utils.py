@@ -1,10 +1,5 @@
-import os
-
-from dotenv import load_dotenv
 from flask import make_response
 from sqlalchemy.exc import IntegrityError
-
-from .config import app, db
 
 
 # Validation Functions
@@ -159,21 +154,6 @@ def authenticate_user(username, password):
     return None
 
 
-# Application configuration
-def configure_app():
-    """
-    Configures the Flask app with database settings and secret key.
-
-    Sets up the database URI and loads environment variables.
-    """
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    DATABASE = os.environ.get(
-        "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
-    )
-    load_dotenv()
-    app.secret_key = os.environ.get("SECRET_KEY")
-
-
 # Database Utility Functions
 def commit_session(session):
     """
@@ -207,23 +187,3 @@ def create_error_response(message, status_code):
     dict: The error response in the form of a dictionary.
     """
     return make_response({"error": message}, status_code)
-
-
-def get_or_create_category(category_name):
-    """
-    Retrieves or creates a category with the given name.
-
-    Args:
-    category_name (str): The name of the category to retrieve or create.
-
-    Returns:
-    Category: The category object.
-
-    Creates a new category with the given name if it doesn't exist.
-    """
-    category = db.session.query(Category).filter_by(name=category_name).first()
-    if category is None:
-        category = Category(name=category_name)
-        db.session.add(category)
-        commit_session(db.session)
-    return category

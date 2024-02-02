@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from config import bcrypt, db
-from server.utilities import (
+from app_utils import (
     normalize_price_input,
     validate_not_blank,
     validate_positive_number,
 )
+from config import bcrypt, db
 from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin
 
@@ -25,6 +25,8 @@ class UserAuth(db.Model, SerializerMixin):
     shipping_info = db.relationship(
         "ShippingInfo", back_populates="user", uselist=False
     )
+    openai_interactions = db.relationship("OpenAIInteraction", back_populates="user")
+    orders = db.relationship("Order", back_populates="user")
 
     @property
     def password(self):
@@ -67,6 +69,11 @@ class Product(db.Model, SerializerMixin):
     price = db.Column(db.Integer, nullable=False)
     image_path = db.Column(db.String(255), nullable=True)
     imageAlt = db.Column(db.String(255), nullable=True)
+    colors = db.relationship(
+        "Color",
+        secondary="product_colors",
+        back_populates="products",
+    )
 
     @validates("name")
     def validate_name(self, key, name):
@@ -86,7 +93,9 @@ class Color(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
     products = db.relationship(
-        "Product", secondary="product_colors", back_populates="colors"
+        "Product",
+        secondary="product_colors",
+        back_populates="colors",
     )
 
 
@@ -109,6 +118,8 @@ class Order(db.Model, SerializerMixin):
         "OrderDetail", back_populates="order", cascade="all, delete-orphan"
     )
     user = db.relationship("UserAuth", back_populates="orders")
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
 
 
 # OrderDetail model represents the details of an order.
