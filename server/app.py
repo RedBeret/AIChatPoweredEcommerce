@@ -2,20 +2,31 @@
 
 # Standard library imports
 import os
+from email.headerregistry import HeaderRegistry
 
-# Local imports
-from config import create_app, init_extensions
+from config import api, app, db, ma
+from dotenv import load_dotenv
 
 # from dotenv import load_dotenv
-from flask import make_response, request
+from flask import jsonify, make_response, request
 from flask_jwt_extended import create_access_token, jwt_required
+from flask_marshmallow import Marshmallow, fields
 from flask_restful import Resource
-from marshmallow import fields, validate
+from marshmallow import Schema, fields, validate
 from models import ChatMessage, Color, Order, Product, ShippingInfo, UserAuth
+from sqlalchemy.exc import IntegrityError
+
+# Local imports
 
 
-app = create_app()
-db, ma, bcrypt, jwt, api = init_extensions(app)
+# Builds app, set attributes
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE = os.environ.get(
+    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
+)
+load_dotenv()
+app.secret_key = os.environ.get("SECRET_KEY")
+app.jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
 
 
 @app.route("/")
@@ -215,24 +226,78 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 class ColorResource(Resource):
     @jwt_required()
     def get(self, color_id):
-        color = Color.query.get(color_id)
-        pass
+        color = Color.query.get_or_404(color_id)
+        return make_response(color.to_dict(), 200)
+
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        new_color = Color(name=data["name"])
+        db.session.add(new_color)
+        db.session.commit()
+        return make_response(new_color.to_dict(), 201)
+
+    @jwt_required()
+    def delete(self, color_id):
+        color = Color.query.get_or_404(color_id)
+        db.session.delete(color)
+        db.session.commit()
+        return make_response({"message": "Color deleted successfully"}, 200)
 
 
 # ChatMessage Resource
 class ChatMessageResource(Resource):
     @jwt_required()
     def get(self, message_id):
-        message = ChatMessage.query.get(message_id)
-        pass
+        message = ChatMessage.query.get_or_404(message_id)
+        return make_response(message.to_dict(), 200)
+
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        new_message = ChatMessage(
+            user_id=data["user_id"],
+            message=data["message"],
+            response=data.get("response", ""),
+        )
+        db.session.add(new_message)
+        db.session.commit()
+        return make_response(new_message.to_dict(), 201)
 
 
 # Order Resource
 class OrderResource(Resource):
     @jwt_required()
     def get(self, order_id):
-        order = Order.query.get(order_id)
-        pass
+        order = Order.query.get_or_404(order_id)
+        return make_response(order.to_dict(), 200)
+
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        new_order = Order(
+            user_id=data["user_id"], shipping_info_id=data.get("shipping_info_id")
+        )
+        db.session.add(new_order)
+        db.session.flush()
+
+        for detail in data["order_details"]:
+            order_detail = OrderDetail(
+                order_id=new_order.id,
+                product_id=detail["product_id"],
+                quantity=detail["quantity"],
+            )
+            db.session.add(order_detail)
+
+        db.session.commit()
+        return make_response(new_order.to_dict(), 201)
+
+    @jwt_required()
+    def delete(self, order_id):
+        order = Order.query.get_or_404(order_id)
+        db.session.delete(order)
+        db.session.commit()
+        return make_response({"message": "Order deleted successfully"}, 200)
 
 
 # Routing
@@ -240,9 +305,11 @@ api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserAuthResource, "/user_auth")
 api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
 api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
-api.add_resource(ColorResource, "/color/<int:color_id>")
-api.add_resource(ChatMessageResource, "/chat_message/<int:message_id>")
-api.add_resource(OrderResource, "/order/<int:order_id>")
+api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
+api.add_resource(
+    ChatMessageResource, "/chat_messages", "/chat_messages/<int:message_id>"
+)
+api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
 
 
 if __name__ == "__main__":

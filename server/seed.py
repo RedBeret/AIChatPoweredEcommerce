@@ -2,114 +2,163 @@
 
 # Standard library imports
 import random
-from random import choice as rc
-from random import randint
+import uuid
+from datetime import datetime
 
 # Local imports
 from app import app, db
 
 # Remote library imports
 from faker import Faker
+from flask_bcrypt import Bcrypt
 from models import (
     AITrainingData,
     ChatMessage,
     Color,
     OpenAIInteraction,
     Order,
+    OrderDetail,
     Product,
+    ProductColor,
+    ShippingInfo,
     UserAuth,
-    db,
 )
 
+# Instantiate Faker
 fake = Faker()
 
-
-def create_users(n=10):
-    """Create N fake users"""
-    for _ in range(n):
-        user = UserAuth(
-            username=faker.user_name(),
-            email=faker.email(),
-            password_hash=faker.password(),
-        )
-        db.session.add(user)
-    db.session.commit()
+# Setup bcrypt
+bcrypt = Bcrypt(app)
 
 
-def create_products(n=5):
-    """Create N fake products"""
-    for _ in range(n):
-        product = Product(
-            name=faker.word(),
-            description=faker.text(),
-            price=random.randint(100, 10000),  # price in cents
-        )
-        db.session.add(product)
-    db.session.commit()
-
-
-def create_colors(n=3):
-    """Create N fake colors"""
-    colors = ["Red", "Blue", "Green", "Yellow", "Black", "White"]
-    for _ in range(n):
-        color = Color(name=random.choice(colors))
-        db.session.add(color)
-        colors.remove(color.name)
-    db.session.commit()
-
-
-def create_orders(n=5):
-    """Create N fake orders"""
-    users = UserAuth.query.all()
-    products = Product.query.all()
-    for _ in range(n):
-        order = Order(
-            user_id=random.choice(users).id, created_at=faker.date_time_this_year()
-        )
-        db.session.add(order)
-    db.session.commit()
-
-
-def create_chat_messages(n=20):
-    """Create N fake chat messages"""
-    users = UserAuth.query.all()
-    for _ in range(n):
-        chat_message = ChatMessage(
-            user_id=random.choice(users).id,
-            message=faker.sentence(),
-            response=faker.sentence(),
-            timestamp=faker.date_time_this_year(),
-        )
-        db.session.add(chat_message)
-    db.session.commit()
-
-
-def create_ai_interactions(n=10):
-    """Create N fake AI interactions"""
-    users = UserAuth.query.all()
-    for _ in range(n):
-        interaction = OpenAIInteraction(
-            user_id=random.choice(users).id,
-            request_data=faker.sentence(),
-            response_data=faker.sentence(),
-            created_at=faker.date_time_this_year(),
-        )
-        db.session.add(interaction)
-    db.session.commit()
-
-
-if __name__ == "__main__":
+def seed_database():
     with app.app_context():
-        print("Starting seed process...")
-
+        # Drop all tables and recreate them
         db.drop_all()
         db.create_all()
 
-        create_users()
-        create_products()
-        create_colors()
-        create_orders()
-        create_chat_messages()
-        create_ai_interactions()
+        # Create fake data for UserAuth
+        user_ids = []  # Keep track of user IDs for later use
+        for _ in range(10):
+            password_hash = bcrypt.generate_password_hash("123456").decode("utf-8")
+            user = UserAuth(
+                username=fake.user_name(),
+                email=fake.email(),
+                password_hash=password_hash,
+            )
+            db.session.add(user)
+            db.session.flush()  # Flush to assign an ID to the user object
+            user_ids.append(user.id)
 
-        print("Database seeded successfully.")
+        db.session.commit()
+
+        # Create fake data for Products
+        product_ids = []  # Keep track of product IDs for later use
+        for _ in range(15):
+            product = Product(
+                name=fake.word(),
+                description=fake.text(),
+                price=random.randint(1000, 5000),  # Assuming price is in cents
+                image_path=fake.image_url(),
+                imageAlt=fake.sentence(),
+            )
+            db.session.add(product)
+            db.session.flush()  # Flush to assign an ID to the product object
+            product_ids.append(product.id)
+
+        db.session.commit()
+
+        # Create fake data for Colors
+        color_ids = []  # Keep track of color IDs for later use
+        colors = ["Red", "Green", "Blue", "Yellow", "Purple", "Orange"]
+        for color_name in colors:
+            color = Color(name=color_name)
+            db.session.add(color)
+            db.session.flush()  # Flush to assign an ID to the color object
+            color_ids.append(color.id)
+
+        db.session.commit()
+
+        # Create fake data for ProductColor relationships
+        for product_id in product_ids:
+            # Randomly assign colors to a product. For simplicity, each product gets one color.
+            color_id = random.choice(color_ids)
+            product_color = ProductColor(product_id=product_id, color_id=color_id)
+            db.session.add(product_color)
+
+        db.session.commit()
+
+        # Create fake data for ShippingInfo
+        for user_id in user_ids:
+            shipping_info = ShippingInfo(
+                user_id=user_id,
+                address_line1=fake.street_address(),
+                address_line2=fake.secondary_address(),
+                city=fake.city(),
+                state=fake.state(),
+                postal_code=fake.postcode(),
+                country=fake.country(),
+                phone_number=fake.phone_number(),
+            )
+            db.session.add(shipping_info)
+
+        db.session.commit()
+
+        # Create fake data for Orders and OrderDetails
+        for _ in range(5):
+            order = Order(
+                user_id=random.choice(user_ids),
+                shipping_info_id=random.choice(
+                    user_ids
+                ),  # Assuming one shipping info per user for simplicity
+                confirmation_num=str(uuid.uuid4()),
+            )
+            db.session.add(order)
+            db.session.flush()  # Flush to assign an ID to the order object
+
+            for _ in range(random.randint(1, 5)):  # Each order has 1-5 order details
+                order_detail = OrderDetail(
+                    order_id=order.id,
+                    product_id=random.choice(product_ids),
+                    quantity=random.randint(1, 3),
+                )
+                db.session.add(order_detail)
+
+        db.session.commit()
+
+        # Create fake data for ChatMessages
+        for _ in range(20):
+            chat_message = ChatMessage(
+                user_id=random.choice(user_ids),
+                message=fake.sentence(),
+                response=fake.sentence(),
+                timestamp=datetime.utcnow(),
+            )
+            db.session.add(chat_message)
+
+        db.session.commit()
+
+        # Create fake data for OpenAIInteractions
+        for _ in range(10):
+            interaction = OpenAIInteraction(
+                user_id=random.choice(user_ids),
+                request_data=fake.sentence(),
+                response_data=fake.sentence(),
+                created_at=datetime.utcnow(),
+            )
+            db.session.add(interaction)
+
+        db.session.commit()
+
+        # Create fake data for AITrainingData
+        for _ in range(10):
+            ai_data = AITrainingData(data=fake.text(max_nb_chars=200))  # Sample AI data
+            db.session.add(ai_data)
+
+        db.session.commit()
+
+        print("Database seeded successfully!")
+
+
+if __name__ == "__main__":
+    seed_database()
