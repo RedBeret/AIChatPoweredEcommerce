@@ -13,7 +13,15 @@ from flask_jwt_extended import create_access_token, jwt_required
 from flask_marshmallow import Marshmallow, fields
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate
-from models import ChatMessage, Color, Order, Product, ShippingInfo, UserAuth
+from models import (
+    ChatMessage,
+    Color,
+    Order,
+    OrderDetail,
+    Product,
+    ShippingInfo,
+    UserAuth,
+)
 from sqlalchemy.exc import IntegrityError
 
 # Local imports
@@ -151,7 +159,6 @@ class ShippingInfoResource(Resource):
 
 # Product Resource
 class ProductResource(Resource):
-    @jwt_required()
     def get(self, product_id=None):
         if product_id:
             product = Product.query.get(product_id)
@@ -160,7 +167,8 @@ class ProductResource(Resource):
             return make_response({"error": "Product not found"}, 404)
         else:
             products = Product.query.all()
-            return make_response(ProductSchema(many=True).dump(products), 200)
+            product_schema = ProductSchema(many=True)
+            return product_schema.dump(products), 200
 
     @jwt_required()
     def post(self):
