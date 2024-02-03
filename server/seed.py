@@ -62,7 +62,7 @@ def seed_database():
                 "Featuring a modular build for easy upgrades and repairs, "
                 "it sets a new standard for innovation and sustainability in the mobile industry.",
                 price=100000,  # Price in cents
-                image_path="server/static/img/visionxphone.png",
+                image_path="img/visionxphone.png",
                 imageAlt="Vision X Pro Max Ultra",
             )
             db.session.add(product)
