@@ -61,6 +61,7 @@ def seed_database():
                 "boasting a transparent design that reveals the cutting-edge tech within. "
                 "Featuring a modular build for easy upgrades and repairs, "
                 "it sets a new standard for innovation and sustainability in the mobile industry.",
+                item_quantity=100,
                 price=100000,  # Price in cents
                 image_path="img/visionxphone.png",
                 imageAlt="Vision X Pro Max Ultra",
@@ -77,17 +78,17 @@ def seed_database():
         for color_name in colors:
             color = Color(name=color_name)
             db.session.add(color)
-            db.session.flush()  # Flush to assign an ID to the color object
+            db.session.flush()
             color_ids.append(color.id)
 
         db.session.commit()
 
         # Create fake data for ProductColor relationships
         for product_id in product_ids:
-            # Randomly assign colors to a product.
-            color_id = random.choice(color_ids)
-            product_color = ProductColor(product_id=product_id, color_id=color_id)
-            db.session.add(product_color)
+            for color_id in color_ids:
+                # Assign each color to each product
+                product_color = ProductColor(product_id=product_id, color_id=color_id)
+                db.session.add(product_color)
 
         db.session.commit()
 

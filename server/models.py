@@ -1,51 +1,64 @@
 import uuid
 from datetime import datetime
 
+# Import utility functions for validation and currency conversion
 from app_utils import (
-    normalize_price_input,
+    cents_to_dollar,
+    dollar_to_cents,
     validate_not_blank,
     validate_positive_number,
 )
-from config import bcrypt, db
+from config import bcrypt, db  # Configuration for database and bcrypt for hashing
 from sqlalchemy.orm import validates
-from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy_serializer import SerializerMixin  # For serializing models
 
 
-# UserAuth model represents user authentication information.
+# UserAuth model to store user authentication details like username, email, and password hash.
+# Includes relationships for related data such as chat messages, shipping information, and orders.
 class UserAuth(db.Model, SerializerMixin):
-    __tablename__ = "user_auth"
+    __tablename__ = "user_auth"  # Specifies the table name in the database
+
+    # Primary Key and fields with uniqueness constraints to avoid duplicate entries
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    # Relationship to chat_messages
+
+    # Defining relationships with other models to enable easy data retrieval
     chat_messages = db.relationship(
         "ChatMessage", back_populates="user", cascade="all, delete-orphan"
     )
-    # Relationship to ShippingInfo
     shipping_info = db.relationship(
         "ShippingInfo", back_populates="user", uselist=False
     )
     openai_interactions = db.relationship("OpenAIInteraction", back_populates="user")
     orders = db.relationship("Order", back_populates="user")
 
+    # Ensures password field is write-only for security reasons
     @property
     def password(self):
         raise AttributeError("password is not a readable attribute")
 
+    # Hashes password before storing in the database
     @password.setter
     def password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
+    # Verifies password against the hash stored in the database
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    serialize_rules = ("-password_hash",)
+    serialize_rules = (
+        "-password_hash",
+    )  # Excludes password_hash from serialization to enhance security
 
 
-# ShippingInfo model represents user shipping information.
+# ShippingInfo model to store user shipping details.
+# Linked to UserAuth model to establish a one-to-one relationship.
 class ShippingInfo(db.Model, SerializerMixin):
     __tablename__ = "shipping_info"
+
+    # Standard fields for storing address information
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
     address_line1 = db.Column(db.String(255), nullable=False)
@@ -56,132 +69,218 @@ class ShippingInfo(db.Model, SerializerMixin):
     country = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
 
-    user = db.relationship("UserAuth", back_populates="shipping_info")
+    user = db.relationship(
+        "UserAuth", back_populates="shipping_info"
+    )  # Establishes relationship with UserAuth model
 
-    serialize_rules = ("-user",)
+    def __repr__(self):
+        return f"<ShippingInfo {self.id} for User {self.user_id}>"
 
 
-# Product model represents a product.
+# Product model to represent individual products.
+# Includes fields for product details and relationships for colors and product colors.
 class Product(db.Model, SerializerMixin):
     __tablename__ = "products"
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    price = db.Column(db.Integer, nullable=False)
+    item_quantity = db.Column(db.Integer, nullable=False, default=0)
+    price = db.Column(db.Integer, nullable=False)  # Stored in cents for precision
     image_path = db.Column(db.String(255), nullable=True)
     imageAlt = db.Column(db.String(255), nullable=True)
     colors = db.relationship(
-        "Color",
-        secondary="product_colors",
-        back_populates="products",
+        "Color", secondary="product_colors", back_populates="products"
     )
 
-    @validates("name")
-    def validate_name(self, key, name):
-        return validate_not_blank(name, key)
+    # Validation methods ensure data integrity before saving to database
+    @validates("name", "description", "image_path", "imageAlt", "item_quantity")
+    def validate_field(self, key, value):
+        # Specific logic for validating item quantity, ensuring it's a positive integer
+        if key == "item_quantity":
+            value = validate_positive_number(value, key)
+        else:  # For other fields, ensures they are not blank
+            validate_not_blank(value, key)
+        return value
 
     @validates("price")
     def validate_price(self, key, price):
-        price_in_cents = normalize_price_input(price)
-        return validate_positive_number(price_in_cents, key)
+        # Ensures price is a positive number before converting and storing in cents
+        price_in_cents = validate_positive_number(price, key)
+        return price_in_cents
 
-    serialize_rules = ("-product_colors",)
+    def to_dict(self, convert_price_to_dollars=False):
+        # Custom serialization logic to optionally convert price from cents to dollars for readability
+        data = (
+            super().to_dict()
+        )  # Utilizes SerializerMixin's to_dict method for base serialization
+        if convert_price_to_dollars:
+            data["price"] = cents_to_dollar(data["price"])
+        return data
+
+    def __repr__(self):
+        return f"<Product {self.name}>"
 
 
-# Color model represents a color.
+# Represents a color option for products. Each color has a unique name and can be associated with multiple products.
 class Color(db.Model, SerializerMixin):
     __tablename__ = "colors"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), unique=True, nullable=False)
+
+    id = db.Column(db.Integer, primary_key=True)  # Unique ID for each color
+    name = db.Column(
+        db.String(255), unique=True, nullable=False
+    )  # Color name must be unique
+
+    # Many-to-many relationship with Product model. A color can belong to many products and vice versa.
     products = db.relationship(
-        "Product",
-        secondary="product_colors",
-        back_populates="colors",
+        "Product", secondary="product_colors", back_populates="colors"
     )
 
+    def __repr__(self):
+        # Representation method for easier identification of color objects in logs and debugging sessions.
+        return f"<Color {self.name}>"
 
-# ProductColor model represents the relationship between products and colors.
+
+# Association table to represent the many-to-many relationship between products and colors.
 class ProductColor(db.Model):
     __tablename__ = "product_colors"
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
-    color_id = db.Column(db.Integer, db.ForeignKey("colors.id"), primary_key=True)
+
+    product_id = db.Column(
+        db.Integer, db.ForeignKey("products.id"), primary_key=True
+    )  # FK to Product
+    color_id = db.Column(
+        db.Integer, db.ForeignKey("colors.id"), primary_key=True
+    )  # FK to Color
+
+    def __repr__(self):
+        # Provides a clear text representation of the relationship for logging and debugging.
+        return (
+            f"<ProductColor Product ID: {self.product_id}, Color ID: {self.color_id}>"
+        )
 
 
-# Order model represents an order.
+# Represents an order placed by a user, containing details like creation time and confirmation number.
 class Order(db.Model, SerializerMixin):
     __tablename__ = "orders"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    id = db.Column(db.Integer, primary_key=True)  # Unique identifier for each order
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user_auth.id"), nullable=False
+    )  # Link to the user who placed the order
+    created_at = db.Column(
+        db.DateTime, default=db.func.current_timestamp()
+    )  # Timestamp of order creation
     confirmation_num = db.Column(
         db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
-    )
-    # ForeignKey to ShippingInfo
+    )  # Unique confirmation number
+
+    # ForeignKey relationship to ShippingInfo for delivery details
     shipping_info_id = db.Column(
         db.Integer, db.ForeignKey("shipping_info.id"), nullable=True
     )
     shipping_info = db.relationship("ShippingInfo")
-    # Relationship with UserAuth and OrderDetail
+    # Relationship to OrderDetail for storing individual items within the order
     order_details = db.relationship(
         "OrderDetail", back_populates="order", cascade="all, delete-orphan"
     )
-    user = db.relationship("UserAuth", back_populates="orders")
+    user = db.relationship(
+        "UserAuth", back_populates="orders"
+    )  # Links back to the user for easy access to their orders
+
+    def __repr__(self):
+        # Representation includes the order ID and the user ID for clarity.
+        return f"<Order {self.id} User ID: {self.user_id}>"
 
 
-# OrderDetail model represents the details of an order.
+# Stores individual items within an order, including product ID and quantity.
 class OrderDetail(db.Model, SerializerMixin):
     __tablename__ = "order_details"
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    order = db.relationship("Order", back_populates="order_details")
-    product = db.relationship("Product")
 
-    serialize_rules = (
-        "-order",
-        "-product",
-    )
+    id = db.Column(
+        db.Integer, primary_key=True
+    )  # Unique identifier for each order detail
+    order_id = db.Column(
+        db.Integer, db.ForeignKey("orders.id"), nullable=False
+    )  # Link to the parent order
+    product_id = db.Column(
+        db.Integer, db.ForeignKey("products.id"), nullable=False
+    )  # Product being ordered
+    quantity = db.Column(db.Integer, nullable=False)  # Quantity of the product
 
-    @validates("product_id")
-    def validate_product_id(self, _, product_id):
-        if not Product.query.get(product_id):
-            raise ValueError(f"There is no product with id {product_id}")
-        return product_id
+    order = db.relationship(
+        "Order", back_populates="order_details"
+    )  # Relationship back to the order
+    product = db.relationship(
+        "Product"
+    )  # Links to the product for easy access to product details
+
+    def __repr__(self):
+        # Provides clarity on the order detail's composition for debugging and logging.
+        return f"<OrderDetail Order ID: {self.order_id}, Product ID: {self.product_id}, Quantity: {self.quantity}>"
 
 
-# ChatMessage model represents a chat message.
+# ChatMessage model captures messages between users and the system, storing content and timestamps.
 class ChatMessage(db.Model, SerializerMixin):
     __tablename__ = "chat_messages"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    response = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    user = db.relationship("UserAuth", back_populates="chat_messages")
-    serialize_rules = ("-user.chat_messages",)
+    id = db.Column(db.Integer, primary_key=True)  # Unique identifier for each message
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user_auth.id"), nullable=False
+    )  # Link to the user who sent/received the message
+    message = db.Column(db.Text, nullable=False)  # Content of the message
+    response = db.Column(db.Text, nullable=False)  # System response to the message
+    timestamp = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False
+    )  # Timestamp of the message exchange
+
+    user = db.relationship(
+        "UserAuth", back_populates="chat_messages"
+    )  # Links back to the user involved in the chat
+
+    def __repr__(self):
+        # Representation to easily identify message exchanges in logs.
+        return f"<ChatMessage {self.id} User ID: {self.user_id}>"
 
 
-# AITrainingData model represents AI training data.
+# AITrainingData model stores data points collected for AI training purposes, including creation timestamps.
 class AITrainingData(db.Model, SerializerMixin):
     __tablename__ = "ai_training_data"
-    id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    id = db.Column(
+        db.Integer, primary_key=True
+    )  # Unique identifier for each data point
+    data = db.Column(
+        db.Text, nullable=False
+    )  # The actual data being stored for AI training
+    created_at = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False
+    )  # Timestamp of data creation
+
+    def __repr__(self):
+        # Representation to easily identify AI training data entries.
+        return f"<AITrainingData {self.id}>"
 
 
+# OpenAIInteraction model captures interactions with OpenAI's API, including request and response data.
 class OpenAIInteraction(db.Model, SerializerMixin):
     __tablename__ = "openai_interactions"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=True)
-    request_data = db.Column(db.Text, nullable=False)  # JSON data sent to OpenAI
-    response_data = db.Column(db.Text, nullable=False)  # JSON response from OpenAI
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    user = db.relationship("UserAuth", back_populates="openai_interactions")
+    id = db.Column(
+        db.Integer, primary_key=True
+    )  # Unique identifier for each interaction
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user_auth.id"), nullable=True
+    )  # Optional link to the user initiating the interaction
+    request_data = db.Column(db.Text, nullable=False)  # Data sent to OpenAI API
+    response_data = db.Column(db.Text, nullable=False)  # Data received from OpenAI API
+    created_at = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False
+    )  # Timestamp of the interaction
 
+    user = db.relationship(
+        "UserAuth", back_populates="openai_interactions"
+    )  # Links back to the user, if applicable
 
-UserAuth.openai_interactions = db.relationship(
-    "OpenAIInteraction", back_populates="user"
-)
+    def __repr__(self):
+        # Provides a concise summary of the interaction for logging and debugging purposes.
+        return f"<OpenAIInteraction {self.id} User ID: {self.user_id}>"

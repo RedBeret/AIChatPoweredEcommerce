@@ -2,17 +2,25 @@
 
 # Standard library imports
 import os
+from datetime import datetime
 from email.headerregistry import HeaderRegistry
 
+import jwt
 from config import api, app, db, ma
 from dotenv import load_dotenv
 
 # from dotenv import load_dotenv
-from flask import jsonify, make_response, request
-from flask_jwt_extended import create_access_token, jwt_required
+from flask import Flask, jsonify, make_response, request
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_jwt_identity,
+    jwt_required,
+)
 from flask_marshmallow import Marshmallow, fields
-from flask_restful import Resource
-from marshmallow import Schema, fields, validate
+from flask_restful import Api, Resource
+from flask_sqlalchemy import SQLAlchemy
+from marshmallow import Schema, ValidationError, fields, validate, validates
 from models import (
     ChatMessage,
     Color,
@@ -160,15 +168,16 @@ class ShippingInfoResource(Resource):
 # Product Resource
 class ProductResource(Resource):
     def get(self, product_id=None):
+        product_schema = ProductSchema()
         if product_id:
-            product = Product.query.get(product_id)
+            product = db.session.get(Product, product_id)
             if product:
-                return make_response(ProductSchema().dump(product), 200)
+                return make_response(jsonify(product=product_schema.dump(product)), 200)
             return make_response({"error": "Product not found"}, 404)
         else:
-            products = Product.query.all()
-            product_schema = ProductSchema(many=True)
-            return product_schema.dump(products), 200
+            products = db.session.query(Product).all()
+            products_data = product_schema.dump(products, many=True)
+            return make_response(jsonify(products=products_data), 200)
 
     @jwt_required()
     def post(self):
@@ -228,6 +237,12 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
         load_instance = True
+
+    price_in_dollars = ma.Method("convert_price_to_dollars")
+
+    def convert_price_to_dollars(self, obj):
+        """Converts price from cents to dollars."""
+        return f"${obj.price / 100:.2f}"
 
 
 # Color Resource
