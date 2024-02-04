@@ -23,7 +23,9 @@ export default function ProductDetail() {
                 }
                 const data = await response.json();
                 setProduct(data);
-                setSelectedColor(data.colors[0]?.name || "");
+                setSelectedColor(
+                    data.colors?.length > 0 ? data.colors[0].name : ""
+                );
             } catch (error) {
                 console.error("Error fetching product:", error);
                 setError(error.message || "Error fetching product");

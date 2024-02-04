@@ -197,17 +197,12 @@ export default function NavbarMenu() {
 
                             {/* Search - !! might remove*/}
                             <div className="flex lg:ml-6">
-                                <a
-                                    href="#"
-                                    className="p-2 text-black hover:text-grey-300"
-                                >
-                                    {/* Light text and hover effect */}
-                                    <span className="sr-only">Search</span>
-                                    <MagnifyingGlassIcon
-                                        className="h-6 w-6"
-                                        aria-hidden="true"
-                                    />
-                                </a>
+                                {/* Light text and hover effect */}
+                                <span className="sr-only">Search</span>
+                                <MagnifyingGlassIcon
+                                    className="h-6 w-6"
+                                    aria-hidden="true"
+                                />
                             </div>
 
                             {/* Cart Icon */}
