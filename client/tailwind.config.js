@@ -5,6 +5,10 @@ module.exports = {
     darkMode: false, // or 'media' or 'class'
     theme: {
         extend: {
+            colors: {
+                coolGray: "#DFE5EA",
+                phoneBg: "#06070C",
+            },
             gridTemplateRows: {
                 "[auto,auto,1fr]": "auto auto 1fr",
             },
