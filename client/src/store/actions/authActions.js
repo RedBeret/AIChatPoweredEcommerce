@@ -57,8 +57,7 @@ export const registerUser =
     async (dispatch) => {
         dispatch({ type: "AUTH_START" });
         try {
-            const response = await fetch("/users/register", {
-                // Adjust the endpoint as necessary
+            const response = await fetch("/user_auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(userData),
@@ -76,5 +75,61 @@ export const registerUser =
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });
             setSignupError(error.message);
+        }
+    };
+
+export const updatePassword =
+    (username, oldPassword, newPassword, setError, setSuccess, history) =>
+    async (dispatch) => {
+        dispatch({ type: "AUTH_START" });
+        try {
+            const response = await fetch("/user_auth", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    username,
+                    password: oldPassword,
+                    newPassword,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Password update failed");
+            }
+
+            dispatch({ type: "UPDATE_PASSWORD_SUCCESS" });
+            setSuccess("Password updated successfully!");
+        } catch (error) {
+            console.error("Error during password update:", error);
+            dispatch({ type: "AUTH_FAIL", payload: error.message });
+            setError(error.message);
+        }
+    };
+
+export const deleteUser =
+    (username, password, setError, setSuccess, history) => async (dispatch) => {
+        dispatch({ type: "AUTH_START" });
+        try {
+            const response = await fetch("/user_auth", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Account deletion failed");
+            }
+
+            dispatch({ type: "AUTH_LOGOUT" });
+            setSuccess("Account deleted successfully!");
+            setTimeout(() => history.push("/signup"), 1000);
+        } catch (error) {
+            console.error("Error during account deletion:", error);
+            dispatch({ type: "AUTH_FAIL", payload: error.message });
+            setError(error.message);
         }
     };

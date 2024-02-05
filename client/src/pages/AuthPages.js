@@ -9,10 +9,10 @@ function AuthPages() {
     return (
         <div>
             <Switch>
-                <Route path="/login" component={Login} />
-                <Route path="/updatepassword" component={UpdatePassword} />
-                <Route path="/register" component={Register} />
-                <Route path="/closeaccount" component={CloseAccount} />
+                <Route path="/auth/login" component={Login} />
+                <Route path="/auth/updatepassword" component={UpdatePassword} />
+                <Route path="/auth/register" component={Register} />
+                <Route path="/auth/closeaccount" component={CloseAccount} />
             </Switch>
         </div>
     );

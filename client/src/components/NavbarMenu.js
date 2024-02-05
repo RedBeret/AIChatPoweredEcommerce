@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import logos from "../assets/img/vision_x_logo.png";
 import { useCartContext } from "./CartContext";
+import UpdatePassword from "./UpdatePassword";
 
 // Main component
 export default function NavbarMenu() {
@@ -97,7 +98,7 @@ export default function NavbarMenu() {
                                     <div className="flow-root">
                                         <div className="flow-root">
                                             <Link
-                                                to="/auth"
+                                                to="/login"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Sign in
@@ -105,10 +106,26 @@ export default function NavbarMenu() {
                                         </div>
                                         <div className="flow-root">
                                             <Link
-                                                to="/auth"
+                                                to="/register"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Create account
+                                            </Link>
+                                        </div>
+                                        <div className="flow-root">
+                                            <Link
+                                                to="/updatepassword"
+                                                className="-m-2 block p-2 font-medium text-black"
+                                            >
+                                                Change Password
+                                            </Link>
+                                        </div>
+                                        <div className="flow-root">
+                                            <Link
+                                                to="/closeaccount"
+                                                className="-m-2 block p-2 font-medium text-black"
+                                            >
+                                                Delete Account
                                             </Link>
                                         </div>
                                     </div>
@@ -178,7 +195,7 @@ export default function NavbarMenu() {
                             {/* Sign in and Create account links */}
                             <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
                                 <Link
-                                    to="/login"
+                                    to="/auth/login"
                                     className="text-sm font-medium text-black hover:text-gray-300"
                                 >
                                     Sign in
@@ -188,7 +205,7 @@ export default function NavbarMenu() {
                                     aria-hidden="true"
                                 />
                                 <Link
-                                    to="/signup"
+                                    to="/auth/register"
                                     className="text-sm font-medium text-black hover:text-gray-300"
                                 >
                                     Create account

@@ -1,11 +1,11 @@
 import React from "react";
 
-function ConfirmationPage() {
+function Confirmation() {
     return (
         <div>
-            <h1>Hello, World! - Product Detail Page</h1>
+            <h1>Success</h1>
         </div>
     );
 }
 
-export default ConfirmationPage;
+export default Confirmation;

@@ -56,14 +56,13 @@ export default function Login() {
                         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                             Don't have an account?{" "}
                             <Link
-                                to="/signup"
+                                to="/auth/signup"
                                 className="text-blue-600 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                             >
                                 Sign up here
                             </Link>
                         </p>
                     </div>
-
                     <Formik
                         initialValues={initialValues}
                         validationSchema={validationSchema}
@@ -104,7 +103,16 @@ export default function Login() {
                                 </button>
                             </Form>
                         )}
-                    </Formik>
+                    </Formik>{" "}
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                        Forgot Password?{" "}
+                        <Link
+                            to="/auth/updatepassword"
+                            className="text-blue-600 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                        >
+                            Change Password
+                        </Link>
+                    </p>
                 </div>
             </div>
         </main>
