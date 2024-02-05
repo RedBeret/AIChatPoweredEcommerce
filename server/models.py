@@ -110,12 +110,15 @@ class Product(db.Model, SerializerMixin):
         return price_in_cents
 
     def to_dict(self, convert_price_to_dollars=False):
-        # Custom serialization logic to optionally convert price from cents to dollars for readability
-        data = (
-            super().to_dict()
-        )  # Utilizes SerializerMixin's to_dict method for base serialization
-        if convert_price_to_dollars:
-            data["price"] = cents_to_dollar(data["price"])
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "price": self.price / 100 if convert_price_to_dollars else self.price,
+            "item_quantity": self.item_quantity,
+            "image_url": self.image_url,
+            "imageAlt": self.imageAlt,
+        }
         return data
 
     def __repr__(self):
@@ -205,8 +208,9 @@ class OrderDetail(db.Model, SerializerMixin):
     product_id = db.Column(
         db.Integer, db.ForeignKey("products.id"), nullable=False
     )  # Product being ordered
-    quantity = db.Column(db.Integer, nullable=False)  # Quantity of the product
-
+    quantity = db.Column(db.Integer, nullable=False)
+    color_id = db.Column(db.Integer, db.ForeignKey("colors.id"))
+    color = db.relationship("Color")
     order = db.relationship(
         "Order", back_populates="order_details"
     )  # Relationship back to the order

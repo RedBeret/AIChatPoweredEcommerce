@@ -4,6 +4,12 @@
 import os
 
 import bcrypt
+from app_utils import (
+    commit_session,
+    create_error_response,
+    normalize_price_input,
+    to_dict,
+)
 from config import api, app, db, ma
 from dotenv import load_dotenv
 from flask import jsonify, make_response, request, session
@@ -281,11 +287,19 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
         sqla_session = db.session
-        exclude = ("price",)
 
-    price_in_dollars = fields.Method("format_price")
+    price_in_dollars = fields.Method(
+        deserialize="price_to_cents", serialize="cents_to_dollars"
+    )
 
-    def format_price(self, obj):
+    def price_to_cents(self, value):
+        try:
+            # Assume value is a string in dollar format, e.g., "12.99"
+            return int(float(value) * 100)
+        except ValueError:
+            raise ValidationError("Price must be a valid number.")
+
+    def cents_to_dollars(self, obj):
         return f"${obj.price / 100:.2f}"
 
     quantity = fields.Integer(
@@ -300,15 +314,17 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 
 # Product Resource handling with JWT for certain operations
 class ProductResource(Resource):
-
+    @jwt_required(
+        optional=True
+    )  # Allow public access but require JWT for certain actions
     def get(self, product_id=None):
-        schema = ProductSchema(many=product_id is None)
-        if product_id:
-            product = Product.query.filter_by(id=product_id).first_or_404()
-            return schema.dump(product), 200
-        else:
-            products = Product.query.all()
-            return schema.dump(products), 200
+        schema = ProductSchema(many=True)
+        products = (
+            Product.query.all()
+            if not product_id
+            else Product.query.filter_by(id=product_id)
+        )
+        return schema.dump(products), 200
 
     @jwt_required()
     def post(self):
