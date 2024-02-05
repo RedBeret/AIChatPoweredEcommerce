@@ -1,37 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { fetchProducts } from "../store/actions/productActions";
 
 export default function Products() {
-    const [products, setProducts] = useState([]);
+    const dispatch = useDispatch();
+    // Correctly access the state under the 'products' key, and then directly use the productList
+    const { productList, isLoading, error } = useSelector(
+        (state) => state.products
+    );
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await fetch("/product");
-                if (!response.ok) {
-                    throw new Error("Error fetching products");
-                }
-                const responseData = await response.json();
+        dispatch(fetchProducts());
+    }, [dispatch]);
 
-                const productsArray = responseData.products
-                    ? responseData.products
-                    : [];
-                setProducts(productsArray);
-            } catch (error) {
-                console.error("Error fetching products:", error);
-            }
-        };
-
-        fetchProducts();
-    }, []);
-
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
     return (
         <div className="bg-coolGray">
             {/* Products grid */}
             <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
                 <h2 className="sr-only">Products</h2>
                 <div className="grid grid-cols-1 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-                    {products.map((product) => {
+                    {productList.map((product) => {
                         const formattedPrice = `$${product.price.toFixed(2)}`;
                         return (
                             <Link
@@ -49,7 +40,6 @@ export default function Products() {
                                 <h3 className="mt-4 text-sm text-gray-700">
                                     {product.name}
                                 </h3>
-                                {/* Display the formatted price */}
                                 <p className="mt-1 text-lg font-medium text-gray-900">
                                     {formattedPrice}
                                 </p>

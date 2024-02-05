@@ -3,9 +3,16 @@ import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { useCartContext } from "../components/CartContext";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+} from "../store/actions/cartActions";
 
 export default function ShoppingCart({ open, setOpen }) {
-    const { cartItems, updateQuantity, removeFromCart } = useCartContext();
+    const dispatch = useDispatch();
+    const { cartItems } = useSelector((state) => state.cart);
 
     const calculateTotal = () => {
         return cartItems

@@ -2,27 +2,22 @@
 
 # Standard library imports
 import os
-from datetime import datetime
-from email.headerregistry import HeaderRegistry
 
 import bcrypt
-import jwt
+from app_utils import (
+    commit_session,
+    create_error_response,
+    normalize_price_input,
+    to_dict,
+)
 from config import api, app, db, ma
 from dotenv import load_dotenv
-
-# from dotenv import load_dotenv
-from flask import Flask, jsonify, make_response, request, session
+from flask import jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    get_jwt_identity,
-    jwt_required,
-)
-from flask_marshmallow import Marshmallow, fields
-from flask_restful import Api, Resource
-from flask_sqlalchemy import SQLAlchemy
-from marshmallow import Schema, ValidationError, fields, validate, validates
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_marshmallow import fields
+from flask_restful import Resource
+from marshmallow import Schema, ValidationError, fields, post_dump, validate
 from models import (
     ChatMessage,
     Color,
@@ -113,7 +108,6 @@ class UserAuthResource(Resource):
             db.session.rollback()
             return make_response({"error": f"User creation failed: {str(error)}"}, 500)
 
-    @jwt_required()
     def delete(self):
         """
         Deletes a user after validating their credentials.
@@ -128,7 +122,6 @@ class UserAuthResource(Resource):
         else:
             return make_response({"error": "Invalid credentials"}, 401)
 
-    @jwt_required()
     def patch(self):
         """
         Updates a user's password after validating the current password.
@@ -171,7 +164,6 @@ class UserLoginResource(Resource):
 
 
 class UserLogoutResource(Resource):
-    @jwt_required()
     def post(self):
         """
         Handles the logout process for users. This method requires JWT authentication
@@ -196,19 +188,30 @@ class UserLogoutResource(Resource):
 
 
 class SessionCheckResource(Resource):
-    @jwt_required()
+    @jwt_required(optional=True)
     def get(self):
         user_id = get_jwt_identity()
-        user = UserAuth.query.get(user_id)
-        if user:
-            return (
-                jsonify(
-                    {"id": user.id, "username": user.username, "email": user.email}
-                ),
-                200,
-            )
+        if user_id:
+            user = UserAuth.query.get(user_id)
+            if user:
+                return (
+                    jsonify(
+                        {
+                            "authenticated": True,
+                            "id": user.id,
+                            "username": user.username,
+                            "email": user.email,
+                        }
+                    ),
+                    200,
+                )
+            else:
+                return (
+                    jsonify({"authenticated": False, "message": "User not found"}),
+                    404,
+                )
         else:
-            return jsonify({"message": "User not found"}), 404
+            return jsonify({"authenticated": False}), 200
 
 
 # User Tested Methods with Insomnia/Postman
@@ -370,7 +373,6 @@ class ProductResource(Resource):
 
 # Color Resource
 class ColorResource(Resource):
-    @jwt_required()
     def get(self, color_id):
         color = Color.query.get_or_404(color_id)
         return make_response(color.to_dict(), 200)

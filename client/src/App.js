@@ -6,17 +6,19 @@ import {
     Redirect,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { checkLoginSession } from "./store/actions/authActions";
+
+// Your imports
 import Home from "./pages/HomePage";
 import ProductDetail from "./pages/ProductDetailPage";
 import About from "./pages/AboutPage";
 import Checkout from "./pages/CheckoutPage";
 import AuthPages from "./pages/AuthPages";
 import Contact from "./pages/ContactPage";
+import Confirmation from "./pages/ConfirmationPage";
 import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
-import { checkLoginSession } from "./store/actions/authActions";
-import Confirmation from "./pages/ConfirmationPage";
 
 export default function App() {
     const dispatch = useDispatch();
@@ -26,7 +28,6 @@ export default function App() {
         dispatch(checkLoginSession());
     }, [dispatch]);
 
-    // Protected Route Component
     const ProtectedRoute = ({ component: Component, ...rest }) => (
         <Route
             {...rest}
@@ -34,11 +35,12 @@ export default function App() {
                 isAuthenticated ? (
                     <Component {...props} />
                 ) : (
-                    <Redirect to="/login" />
+                    <Redirect to="/auth/login" />
                 )
             }
         />
     );
+
     return (
         <div>
             <CartWrapper>
@@ -52,12 +54,12 @@ export default function App() {
                         />
                         <Route path="/about" component={About} />
                         <Route path="/checkout" component={Checkout} />
-                        <Route path="/auth" component={AuthPages} />{" "}
-                        <Route path="/contact" component={Contact} />
                         <ProtectedRoute
                             path="/confirmation"
                             component={Confirmation}
                         />
+                        <Route path="/auth" component={AuthPages} />
+                        <Route path="/contact" component={Contact} />
                     </Switch>
                     <Footer />
                 </Router>

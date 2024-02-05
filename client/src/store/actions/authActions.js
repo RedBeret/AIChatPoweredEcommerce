@@ -15,7 +15,10 @@ export const authenticateUser =
 
             dispatch({
                 type: "AUTH_SUCCESS",
-                payload: { accessToken: data.access_token, user: username },
+                payload: {
+                    accessToken: data.access_token,
+                    user: { id: data.id, username: username },
+                },
             });
 
             setTimeout(() => history.push("/"), 1000);
@@ -79,7 +82,7 @@ export const registerUser =
     };
 
 export const updatePassword =
-    (username, oldPassword, newPassword, setError, setSuccess, history) =>
+    (username, oldPassword, newPassword, setError, setSuccess) =>
     async (dispatch) => {
         dispatch({ type: "AUTH_START" });
         try {

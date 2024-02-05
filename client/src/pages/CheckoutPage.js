@@ -2,6 +2,7 @@ import React from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useCartContext } from "../components/CartContext";
+import { useSelector } from "react-redux";
 
 const CheckoutSchema = Yup.object().shape({
     email: Yup.string().email("Invalid email").required("Required"),
@@ -14,14 +15,18 @@ const CheckoutSchema = Yup.object().shape({
 });
 
 const Checkout = () => {
-    const { cartItems } = useCartContext();
+    const { cartItems } = useSelector((state) => state.cart);
+    const user = useSelector((state) => state.auth.user);
 
     const calculateTotal = () => {
         return cartItems
             .reduce((total, item) => total + item.price * item.quantity, 0)
             .toFixed(2);
     };
-
+    const orderDetails = cartItems.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+    }));
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-3xl font-bold mb-4">Checkout</h1>
@@ -57,7 +62,7 @@ const Checkout = () => {
             {/* Checkout Form */}
             <Formik
                 initialValues={{
-                    email: "",
+                    email: user.email || "",
                     firstName: "",
                     lastName: "",
                     address: "",
