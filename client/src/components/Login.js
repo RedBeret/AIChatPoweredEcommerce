@@ -9,6 +9,7 @@ export default function Login() {
     const dispatch = useDispatch();
     const history = useHistory();
     const [loginError, setLoginError] = useState("");
+    const [loginSuccess, setLoginSuccess] = useState("");
 
     const initialValues = {
         username: "",
@@ -22,9 +23,15 @@ export default function Login() {
 
     const onSubmit = async (values, { setSubmitting }) => {
         const { username, password } = values;
-
-        dispatch(authenticateUser(username, password, setLoginError, history)); // Dispatch the login action
-
+        dispatch(
+            authenticateUser(
+                username,
+                password,
+                setLoginError,
+                setLoginSuccess,
+                history
+            )
+        );
         setSubmitting(false);
     };
 

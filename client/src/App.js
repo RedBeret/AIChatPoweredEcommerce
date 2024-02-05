@@ -10,7 +10,16 @@ import Contact from "./pages/ContactPage";
 import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
-function App() {
+import { useDispatch } from "react-redux";
+import { checkLoginSession } from "./store/actions/authActions";
+import { useEffect } from "react";
+
+export default function App() {
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(checkLoginSession());
+    }, [dispatch]);
     return (
         <div>
             <CartWrapper>
@@ -33,5 +42,3 @@ function App() {
         </div>
     );
 }
-
-export default App;
