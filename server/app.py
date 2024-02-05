@@ -2,17 +2,27 @@
 
 # Standard library imports
 import os
+from datetime import datetime
 from email.headerregistry import HeaderRegistry
 
+import bcrypt
+import jwt
 from config import api, app, db, ma
 from dotenv import load_dotenv
 
 # from dotenv import load_dotenv
-from flask import jsonify, make_response, request
-from flask_jwt_extended import create_access_token, jwt_required
+from flask import Flask, jsonify, make_response, request, session
+from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    get_jwt_identity,
+    jwt_required,
+)
 from flask_marshmallow import Marshmallow, fields
-from flask_restful import Resource
-from marshmallow import Schema, fields, validate
+from flask_restful import Api, Resource
+from flask_sqlalchemy import SQLAlchemy
+from marshmallow import Schema, ValidationError, fields, validate, validates
 from models import (
     ChatMessage,
     Color,
@@ -36,52 +46,100 @@ load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY")
 app.jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
 
+bcrypt = Bcrypt(app)
+
 
 @app.route("/")
 def index():
     return "<h1>ChatPoweredEcommerce</h1>"
 
 
-# User Authentication Resource
+class UserAuthSchema(ma.SQLAlchemyAutoSchema):
+    """
+    A Marshmallow schema for serializing and deserializing UserAuth instances.
+    This schema is used for validating user input upon registration and for output formatting.
+    Excludes the password_hash field from the serialized output for security reasons.
+    """
+
+    class Meta:
+        model = UserAuth
+        load_instance = (
+            True  # Allows deserialization directly into a UserAuth model instance.
+        )
+        exclude = ("password_hash",)  # Excludes sensitive information from the output.
+
+    # Ensures passwords are at least 6 characters long, enhancing basic security.
+    password = fields.Str(
+        load_only=True, required=True, validate=validate.Length(min=6)
+    )
+
+
 class UserAuthResource(Resource):
+    """
+    Resource for managing UserAuth entities including retrieval, creation, deletion,
+    and updating of user information. Incorporates JWT for secure operations requiring authentication.
+    """
+
     def get(self):
-        return make_response([user.to_dict() for user in UserAuth.query.all()], 200)
+        """
+        Retrieves and returns all user records, excluding their password hashes.
+        """
+        users = UserAuth.query.all()
+        user_schema = UserAuthSchema(many=True, only=["id", "username", "email"])
+        return make_response(jsonify(user_schema.dump(users)), 200)
 
     def post(self):
+        """
+        Creates a new user with the provided username, email, and password.
+        Passwords are hashed before storage to ensure security.
+        """
         user_data = request.get_json()
-        # Checks if user already exists
-        if UserAuth.query.filter_by(username=user_data["username"]).first():
-            return make_response({"error": "Username already exists."}, 400)
-
-        # Creates a new user
         try:
+            hashed_password = generate_password_hash(user_data["password"]).decode(
+                "utf-8"
+            )
             new_user = UserAuth(
                 username=user_data["username"],
                 email=user_data["email"],
+                password_hash=hashed_password,
             )
-            new_user.password = user_data["password"]
             db.session.add(new_user)
             db.session.commit()
             return make_response({"message": "User created successfully"}, 201)
+        except IntegrityError:
+            db.session.rollback()
+            return make_response({"error": "Username or email already exists."}, 409)
         except Exception as error:
             db.session.rollback()
-            return make_response({"error": str(error)}, 500)
+            return make_response({"error": f"User creation failed: {str(error)}"}, 500)
 
+    @jwt_required()
     def delete(self):
+        """
+        Deletes a user after validating their credentials.
+        Requires JWT authentication to ensure that the operation is authorized.
+        """
         data = request.get_json()
         user = UserAuth.query.filter_by(username=data["username"]).first()
-        if user and user.check_password(data["password"]):
+        if user and check_password_hash(user.password_hash, data["password"]):
             db.session.delete(user)
             db.session.commit()
             return make_response({"message": "User deleted successfully"}, 200)
         else:
             return make_response({"error": "Invalid credentials"}, 401)
 
+    @jwt_required()
     def patch(self):
+        """
+        Updates a user's password after validating the current password.
+        Requires JWT authentication to ensure the user is authorized to make the change.
+        """
         data = request.get_json()
         user = UserAuth.query.filter_by(username=data["username"]).first()
-        if user and user.check_password(data["password"]):
-            user.password = data["newPassword"]
+        if user and check_password_hash(user.password_hash, data["password"]):
+            user.password_hash = generate_password_hash(data["newPassword"]).decode(
+                "utf-8"
+            )
             db.session.commit()
             return make_response({"message": "Password updated successfully"}, 200)
         else:
@@ -89,23 +147,88 @@ class UserAuthResource(Resource):
 
 
 class UserLoginResource(Resource):
+    """
+    Handles user login requests. Validates provided credentials and issues a JWT token upon success.
+    """
+
     def post(self):
+        """
+        Authenticates a user against stored credentials.
+        If successful, returns a JWT token for accessing protected endpoints.
+        """
         data = request.get_json()
         user = UserAuth.query.filter_by(username=data["username"]).first()
-        if user and user.check_password(data["password"]):
+        if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
+            # Create JWT token
             access_token = create_access_token(identity=user.id)
-            return {"access_token": access_token}, 200
-        return {"message": "Invalid credentials"}, 401
+            # Set user information in Flask session
+            session["user_logged_in"] = True
+            session["user_id"] = user.id
+            # Return JWT token
+            return jsonify(access_token=access_token), 200
+        else:
+            return {"error": "Invalid username or password. Please try again."}, 401
 
 
-# ShippingInfo Resource
+class UserLogoutResource(Resource):
+    @jwt_required()
+    def post(self):
+        """
+        Handles the logout process for users. This method requires JWT authentication
+        to ensure that only logged-in users can initiate a logout.
+
+        Upon logout:
+        - Clears the Flask session to remove any stored user information.
+        - Clears the 'access_token' cookie to remove the JWT token from the client browser.
+        """
+        # Clear Flask session, removing all user information stored in session
+        session.clear()
+
+        # Create a response indicating successful logout
+        resp = jsonify({"logout": True})
+
+        # Set the 'access_token' cookie to an empty value with an expiration date in the past
+        # This instructs the client browser to remove the cookie, effectively "forgetting" the JWT token
+        resp.set_cookie("access_token", "", expires=0)  # Clear the cookie
+
+        # Return the response with a 200 OK status, indicating a successful logout
+        return resp, 200
+
+
+class SessionCheckResource(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        user = UserAuth.query.get(user_id)
+        if user:
+            return (
+                jsonify(
+                    {"id": user.id, "username": user.username, "email": user.email}
+                ),
+                200,
+            )
+        else:
+            return jsonify({"message": "User not found"}), 404
+
+
+# User Tested Methods with Insomnia/Postman
+
+
+class ShippingInfoSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = ShippingInfo
+        sqla_session = db.session
+
+
 class ShippingInfoResource(Resource):
     @jwt_required()
     def get(self, user_id):
-        user = UserAuth.query.get(user_id)
-        if user and user.shipping_info:
-            return make_response(user.shipping_info.to_dict(), 200)
-        return make_response({"message": "Shipping info not found"}, 404)
+        user = get_jwt_identity()
+        shipping_info = ShippingInfo.query.filter_by(user_id=user_id).first()
+        if not shipping_info or user_id != user:
+            return {"error": "Shipping information not found or access denied."}, 404
+        schema = ShippingInfoSchema()
+        return schema.dump(shipping_info), 200
 
     @jwt_required()
     def post(self, user_id):
@@ -157,33 +280,66 @@ class ShippingInfoResource(Resource):
         return make_response({"message": "Shipping info updated successfully"}, 200)
 
 
-# Product Resource
+class ProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Product
+        sqla_session = db.session
+
+    price_in_dollars = fields.Method(
+        deserialize="price_to_cents", serialize="cents_to_dollars"
+    )
+
+    def price_to_cents(self, value):
+        try:
+            # Assume value is a string in dollar format, e.g., "12.99"
+            return int(float(value) * 100)
+        except ValueError:
+            raise ValidationError("Price must be a valid number.")
+
+    def cents_to_dollars(self, obj):
+        return f"${obj.price / 100:.2f}"
+
+    quantity = fields.Integer(
+        validate=validate.Range(min=1),
+        required=True,
+        error_messages={
+            "required": "Quantity is required.",
+            "invalid": "Quantity must be a positive integer.",
+        },
+    )
+
+
+# Product Resource handling with JWT for certain operations
 class ProductResource(Resource):
+    @jwt_required(
+        optional=True
+    )  # Allow public access but require JWT for certain actions
     def get(self, product_id=None):
-        if product_id:
-            product = Product.query.get(product_id)
-            if product:
-                return make_response(ProductSchema().dump(product), 200)
-            return make_response({"error": "Product not found"}, 404)
-        else:
-            products = Product.query.all()
-            product_schema = ProductSchema(many=True)
-            return product_schema.dump(products), 200
+        schema = ProductSchema(many=True)
+        products = (
+            Product.query.all()
+            if not product_id
+            else Product.query.filter_by(id=product_id)
+        )
+        return schema.dump(products), 200
 
     @jwt_required()
     def post(self):
-        product_data = request.get_json()
-        new_product = Product(
-            name=product_data["name"],
-            description=product_data.get("description", ""),
-            price=product_data["price"],
-            image_path=product_data.get("image_path", ""),
-            imageAlt=product_data.get("imageAlt", ""),
-        )
-
-        db.session.add(new_product)
-        db.session.commit()
-        return make_response({"message": "Product created successfully"}, 201)
+        schema = ProductSchema()
+        try:
+            product_data = schema.load(request.get_json())
+            product = Product(**product_data)
+            db.session.add(product)
+            db.session.commit()
+            return {
+                "message": "Product created successfully",
+                "product": schema.dump(product),
+            }, 201
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Could not create the product due to internal error."}, 500
 
     @jwt_required()
     def patch(self, product_id):
@@ -210,24 +366,6 @@ class ProductResource(Resource):
         db.session.delete(product)
         db.session.commit()
         return make_response({"message": "Product deleted successfully"}, 200)
-
-
-class UserAuthSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = UserAuth
-        load_instance = True
-        exclude = ("password_hash",)
-
-    password = fields.Str(
-        load_only=True, required=True, validate=validate.Length(min=6)
-    )
-
-
-# Product Schema
-class ProductSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Product
-        load_instance = True
 
 
 # Color Resource
@@ -310,6 +448,7 @@ class OrderResource(Resource):
 
 # Routing
 api.add_resource(UserLoginResource, "/login")
+api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
 api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
 api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
@@ -318,6 +457,7 @@ api.add_resource(
     ChatMessageResource, "/chat_messages", "/chat_messages/<int:message_id>"
 )
 api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
+api.add_resource(SessionCheckResource, "/check_session")
 
 
 if __name__ == "__main__":

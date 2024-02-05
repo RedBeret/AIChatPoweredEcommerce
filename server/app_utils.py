@@ -1,3 +1,4 @@
+# app_utils.py contains utility functions for the Flask app, including validation, database, and error handling.
 from flask import make_response
 from sqlalchemy.exc import IntegrityError
 
@@ -122,36 +123,26 @@ def normalize_price_input(price_input):
     return dollar_to_cents(price_input)
 
 
-def to_dict(self, convert_price_to_dollars=False):
-    data = {
-        "id": self.id,
-        "name": self.name,
-        "description": self.description,
-        "price": self.price / 100 if convert_price_to_dollars else self.price,
-        "item_quantity": self.item_quantity,
-        "image_url": self.image_url,
-        "imageAlt": self.imageAlt,
-    }
-    return data
-
-
-# Session and Authentication Helpers
-def authenticate_user(username, password):
+def to_dict(model_instance, convert_price_to_dollars=False):
     """
-    Authenticates a user based on their username and password.
+    Converts a SQLAlchemy model instance into a dictionary, with optional price conversion.
 
     Args:
-    username (str): The username of the user.
-    password (str): The password to be authenticated.
+        model_instance: The SQLAlchemy model instance to convert.
+        convert_price_to_dollars (bool): If True, convert price fields from cents to dollars.
 
     Returns:
-    User: The authenticated user object or None if authentication fails.
+        A dictionary representation of the model instance.
     """
-    user = User.query.filter_by(username=username).first()
+    data = model_instance.__dict__.copy()
 
-    if user and user.authenticate(password):
-        return user
-    return None
+    data.pop("_sa_instance_state", None)
+
+    # Convert price from cents to dollars if applicable
+    if convert_price_to_dollars and "price" in data:
+        data["price"] = cents_to_dollar(data["price"])
+
+    return data
 
 
 # Database Utility Functions

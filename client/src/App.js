@@ -1,6 +1,11 @@
-import React from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-
+import React, { useEffect } from "react";
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Redirect,
+} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Home from "./pages/HomePage";
 import ProductDetail from "./pages/ProductDetailPage";
 import About from "./pages/AboutPage";
@@ -10,7 +15,30 @@ import Contact from "./pages/ContactPage";
 import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
-function App() {
+import { checkLoginSession } from "./store/actions/authActions";
+import Confirmation from "./pages/ConfirmationPage";
+
+export default function App() {
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+    useEffect(() => {
+        dispatch(checkLoginSession());
+    }, [dispatch]);
+
+    // Protected Route Component
+    const ProtectedRoute = ({ component: Component, ...rest }) => (
+        <Route
+            {...rest}
+            render={(props) =>
+                isAuthenticated ? (
+                    <Component {...props} />
+                ) : (
+                    <Redirect to="/login" />
+                )
+            }
+        />
+    );
     return (
         <div>
             <CartWrapper>
@@ -26,6 +54,10 @@ function App() {
                         <Route path="/checkout" component={Checkout} />
                         <Route path="/auth" component={AuthPages} />{" "}
                         <Route path="/contact" component={Contact} />
+                        <ProtectedRoute
+                            path="/confirmation"
+                            component={Confirmation}
+                        />
                     </Switch>
                     <Footer />
                 </Router>
@@ -33,5 +65,3 @@ function App() {
         </div>
     );
 }
-
-export default App;
