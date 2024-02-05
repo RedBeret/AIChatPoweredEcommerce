@@ -109,16 +109,22 @@ class Product(db.Model, SerializerMixin):
         price_in_cents = validate_positive_number(price, key)
         return price_in_cents
 
-    def to_dict(self, convert_price_to_dollars=False):
+    def to_dict(self, include_colors=False):
         data = {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "price": self.price / 100 if convert_price_to_dollars else self.price,
+            "price": self.price,
             "item_quantity": self.item_quantity,
-            "image_url": self.image_url,
+            "image_path": self.image_path,
             "imageAlt": self.imageAlt,
         }
+
+        if include_colors:
+            data["colors"] = [
+                {"id": color.id, "name": color.name} for color in self.colors
+            ]
+
         return data
 
     def __repr__(self):

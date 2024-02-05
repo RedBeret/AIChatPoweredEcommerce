@@ -314,17 +314,13 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 
 # Product Resource handling with JWT for certain operations
 class ProductResource(Resource):
-    @jwt_required(
-        optional=True
-    )  # Allow public access but require JWT for certain actions
     def get(self, product_id=None):
-        schema = ProductSchema(many=True)
-        products = (
-            Product.query.all()
-            if not product_id
-            else Product.query.filter_by(id=product_id)
-        )
-        return schema.dump(products), 200
+        if product_id:
+            product = Product.query.get_or_404(product_id)
+            return jsonify(product.to_dict(include_colors=True))
+        else:
+            products = Product.query.all()
+            return jsonify([product.to_dict() for product in products])
 
     @jwt_required()
     def post(self):
