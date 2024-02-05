@@ -32,6 +32,8 @@ metadata = MetaData(
 )
 db = SQLAlchemy(metadata=metadata)
 ma = Marshmallow(app)
+ma.init_app(app)
+
 migrate = Migrate(app, db)
 db.init_app(app)
 jwt = JWTManager(app)

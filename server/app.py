@@ -2,27 +2,16 @@
 
 # Standard library imports
 import os
-from datetime import datetime
-from email.headerregistry import HeaderRegistry
 
 import bcrypt
-import jwt
 from config import api, app, db, ma
 from dotenv import load_dotenv
-
-# from dotenv import load_dotenv
-from flask import Flask, jsonify, make_response, request, session
+from flask import jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    get_jwt_identity,
-    jwt_required,
-)
-from flask_marshmallow import Marshmallow, fields
-from flask_restful import Api, Resource
-from flask_sqlalchemy import SQLAlchemy
-from marshmallow import Schema, ValidationError, fields, validate, validates
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_marshmallow import fields
+from flask_restful import Resource
+from marshmallow import Schema, ValidationError, fields, post_dump, validate
 from models import (
     ChatMessage,
     Color,
@@ -113,7 +102,6 @@ class UserAuthResource(Resource):
             db.session.rollback()
             return make_response({"error": f"User creation failed: {str(error)}"}, 500)
 
-    @jwt_required()
     def delete(self):
         """
         Deletes a user after validating their credentials.
@@ -128,7 +116,6 @@ class UserAuthResource(Resource):
         else:
             return make_response({"error": "Invalid credentials"}, 401)
 
-    @jwt_required()
     def patch(self):
         """
         Updates a user's password after validating the current password.
@@ -171,7 +158,6 @@ class UserLoginResource(Resource):
 
 
 class UserLogoutResource(Resource):
-    @jwt_required()
     def post(self):
         """
         Handles the logout process for users. This method requires JWT authentication
@@ -196,19 +182,30 @@ class UserLogoutResource(Resource):
 
 
 class SessionCheckResource(Resource):
-    @jwt_required()
+    @jwt_required(optional=True)
     def get(self):
         user_id = get_jwt_identity()
-        user = UserAuth.query.get(user_id)
-        if user:
-            return (
-                jsonify(
-                    {"id": user.id, "username": user.username, "email": user.email}
-                ),
-                200,
-            )
+        if user_id:
+            user = UserAuth.query.get(user_id)
+            if user:
+                return (
+                    jsonify(
+                        {
+                            "authenticated": True,
+                            "id": user.id,
+                            "username": user.username,
+                            "email": user.email,
+                        }
+                    ),
+                    200,
+                )
+            else:
+                return (
+                    jsonify({"authenticated": False, "message": "User not found"}),
+                    404,
+                )
         else:
-            return jsonify({"message": "User not found"}), 404
+            return jsonify({"authenticated": False}), 200
 
 
 # User Tested Methods with Insomnia/Postman
@@ -284,19 +281,11 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
         sqla_session = db.session
+        exclude = ("price",)
 
-    price_in_dollars = fields.Method(
-        deserialize="price_to_cents", serialize="cents_to_dollars"
-    )
+    price_in_dollars = fields.Method("format_price")
 
-    def price_to_cents(self, value):
-        try:
-            # Assume value is a string in dollar format, e.g., "12.99"
-            return int(float(value) * 100)
-        except ValueError:
-            raise ValidationError("Price must be a valid number.")
-
-    def cents_to_dollars(self, obj):
+    def format_price(self, obj):
         return f"${obj.price / 100:.2f}"
 
     quantity = fields.Integer(
@@ -311,17 +300,15 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 
 # Product Resource handling with JWT for certain operations
 class ProductResource(Resource):
-    @jwt_required(
-        optional=True
-    )  # Allow public access but require JWT for certain actions
+
     def get(self, product_id=None):
-        schema = ProductSchema(many=True)
-        products = (
-            Product.query.all()
-            if not product_id
-            else Product.query.filter_by(id=product_id)
-        )
-        return schema.dump(products), 200
+        schema = ProductSchema(many=product_id is None)
+        if product_id:
+            product = Product.query.filter_by(id=product_id).first_or_404()
+            return schema.dump(product), 200
+        else:
+            products = Product.query.all()
+            return schema.dump(products), 200
 
     @jwt_required()
     def post(self):
@@ -370,7 +357,6 @@ class ProductResource(Resource):
 
 # Color Resource
 class ColorResource(Resource):
-    @jwt_required()
     def get(self, color_id):
         color = Color.query.get_or_404(color_id)
         return make_response(color.to_dict(), 200)
