@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
 # Standard library imports
+import logging
 import os
 
 import bcrypt
-from app_utils import (
-    commit_session,
-    create_error_response,
-    normalize_price_input,
-    to_dict,
-)
 from config import api, app, db, ma
 from dotenv import load_dotenv
 from flask import jsonify, make_response, request, session
@@ -187,31 +182,44 @@ class UserLogoutResource(Resource):
         return resp, 200
 
 
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    return (
+        jsonify({"error": "An unexpected error occurred", "details": str(error)}),
+        500,
+    )
+
+
 class SessionCheckResource(Resource):
     @jwt_required(optional=True)
     def get(self):
-        user_id = get_jwt_identity()
-        if user_id:
-            user = UserAuth.query.get(user_id)
-            if user:
-                return (
-                    jsonify(
-                        {
-                            "authenticated": True,
-                            "id": user.id,
-                            "username": user.username,
-                            "email": user.email,
-                        }
-                    ),
-                    200,
-                )
+        try:
+            user_id = get_jwt_identity()
+            logging.info(f"User ID from JWT: {user_id}")
+            if user_id:
+                user = UserAuth.query.get(user_id)
+                if user:
+                    return (
+                        jsonify(
+                            {
+                                "authenticated": True,
+                                "id": user.id,
+                                "username": user.username,
+                                "email": user.email,
+                            }
+                        ),
+                        200,
+                    )
+                else:
+                    return (
+                        jsonify({"authenticated": False, "message": "User not found"}),
+                        404,
+                    )
             else:
-                return (
-                    jsonify({"authenticated": False, "message": "User not found"}),
-                    404,
-                )
-        else:
-            return jsonify({"authenticated": False}), 200
+                return jsonify({"authenticated": False}), 200
+        except Exception as e:
+            logging.error(f"Error in SessionCheckResource: {e}")
+            return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 
 # User Tested Methods with Insomnia/Postman

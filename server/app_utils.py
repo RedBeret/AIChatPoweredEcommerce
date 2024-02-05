@@ -1,4 +1,6 @@
 # app_utils.py contains utility functions for the Flask app, including validation, database, and error handling.
+import logging
+
 from flask import make_response
 from sqlalchemy.exc import IntegrityError
 
