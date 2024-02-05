@@ -1,3 +1,4 @@
+//authActions.js
 export const authenticateUser =
     (username, password, setError, history) => async (dispatch) => {
         dispatch({ type: "AUTH_START" });

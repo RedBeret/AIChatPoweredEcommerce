@@ -24,10 +24,7 @@ export default function App() {
     const dispatch = useDispatch();
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-    useEffect(() => {
-        dispatch(checkLoginSession());
-    }, [dispatch]);
-
+    // Protected Route for Confirmation page
     const ProtectedRoute = ({ component: Component, ...rest }) => (
         <Route
             {...rest}
@@ -60,6 +57,10 @@ export default function App() {
                         />
                         <Route path="/auth" component={AuthPages} />
                         <Route path="/contact" component={Contact} />
+                        {/* <Route
+                            path="/tech-support"
+                            component={TechSupportChatbot}
+                        />{" "} */}
                     </Switch>
                     <Footer />
                 </Router>
@@ -67,3 +68,5 @@ export default function App() {
         </div>
     );
 }
+
+//App.js
