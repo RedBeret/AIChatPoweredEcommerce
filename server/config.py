@@ -20,8 +20,9 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="./static", static_url_path="/static")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI", "sqlite:///app.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.json.compact = False
 CORS(app)
 # Define metadata, instantiate db
