@@ -10,7 +10,6 @@ import {
 } from "@heroicons/react/24/outline";
 import logos from "../assets/img/vision_x_logo.png";
 import { useCartContext } from "./CartContext";
-import UpdatePassword from "./UpdatePassword";
 
 // Main component
 export default function NavbarMenu() {
@@ -98,7 +97,7 @@ export default function NavbarMenu() {
                                     <div className="flow-root">
                                         <div className="flow-root">
                                             <Link
-                                                to="/login"
+                                                to="/auth/login"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Sign in
@@ -106,7 +105,7 @@ export default function NavbarMenu() {
                                         </div>
                                         <div className="flow-root">
                                             <Link
-                                                to="/register"
+                                                to="/auth/register"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Create account
@@ -114,7 +113,7 @@ export default function NavbarMenu() {
                                         </div>
                                         <div className="flow-root">
                                             <Link
-                                                to="/updatepassword"
+                                                to="/auth/updatepassword"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Change Password
@@ -122,7 +121,7 @@ export default function NavbarMenu() {
                                         </div>
                                         <div className="flow-root">
                                             <Link
-                                                to="/closeaccount"
+                                                to="/auth/closeaccount"
                                                 className="-m-2 block p-2 font-medium text-black"
                                             >
                                                 Delete Account

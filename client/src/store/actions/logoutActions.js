@@ -1,3 +1,4 @@
+// logoutActions.js
 export const logoutUser = (history) => async (dispatch) => {
     dispatch({ type: "AUTH_START" });
     try {

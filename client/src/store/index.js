@@ -12,3 +12,5 @@ const store = configureStore({
 });
 
 export default store;
+
+//src/store/index.js

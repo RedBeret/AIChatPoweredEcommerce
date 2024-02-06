@@ -9,7 +9,6 @@ from config import api, app, db, ma
 from dotenv import load_dotenv
 from flask import jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from flask_marshmallow import fields
 from flask_restful import Resource
 from marshmallow import Schema, ValidationError, fields, post_dump, validate
@@ -34,7 +33,6 @@ DATABASE = os.environ.get(
 )
 load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY")
-app.jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
 
 bcrypt = Bcrypt(app)
 
@@ -84,38 +82,58 @@ class UserAuthResource(Resource):
         Passwords are hashed before storage to ensure security.
         """
         user_data = request.get_json()
-        try:
-            hashed_password = generate_password_hash(user_data["password"]).decode(
-                "utf-8"
-            )
-            new_user = UserAuth(
-                username=user_data["username"],
-                email=user_data["email"],
-                password_hash=hashed_password,
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            return make_response({"message": "User created successfully"}, 201)
-        except IntegrityError:
-            db.session.rollback()
-            return make_response({"error": "Username or email already exists."}, 409)
-        except Exception as error:
-            db.session.rollback()
-            return make_response({"error": f"User creation failed: {str(error)}"}, 500)
+        user = UserAuth.query.filter_by(username=user_data["username"]).first()
+        if user:
+            return make_response(jsonify({"error": "Username already exists."}), 400)
+
+        hashed_password = bcrypt.generate_password_hash(user_data["password"]).decode(
+            "utf-8"
+        )
+        new_user = UserAuth(
+            username=user_data["username"],
+            email=user_data["email"],
+            password_hash=hashed_password,
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        # Automatically log the user in after registration
+        session["user_id"] = new_user.id
+        session["username"] = new_user.username
+        session["logged_in"] = True
+
+        return make_response(
+            jsonify({"message": "User created and logged in successfully"}), 201
+        )
 
     def delete(self):
         """
         Deletes a user after validating their credentials.
         Requires JWT authentication to ensure that the operation is authorized.
         """
-        data = request.get_json()
-        user = UserAuth.query.filter_by(username=data["username"]).first()
-        if user and check_password_hash(user.password_hash, data["password"]):
-            db.session.delete(user)
-            db.session.commit()
-            return make_response({"message": "User deleted successfully"}, 200)
-        else:
-            return make_response({"error": "Invalid credentials"}, 401)
+        try:
+            data = request.get_json()
+            if not all(key in data for key in ("username", "password")):
+                return make_response(
+                    {"error": "Username and password are required"}, 400
+                )
+
+            username = data["username"]
+            password = data["password"]
+
+            user = UserAuth.query.filter_by(username=username).first()
+
+            if user and bcrypt.check_password_hash(user.password_hash, password):
+                db.session.delete(user)
+                db.session.commit()
+                session.clear()
+                return make_response({"message": "User deleted successfully"}, 200)
+            elif user:
+                return make_response({"error": "Incorrect password"}, 401)
+            else:
+                return make_response({"error": "User not found"}, 404)
+        except Exception as error:
+            return make_response({"error": str(error)}, 500)
 
     def patch(self):
         """
@@ -124,10 +142,10 @@ class UserAuthResource(Resource):
         """
         data = request.get_json()
         user = UserAuth.query.filter_by(username=data["username"]).first()
-        if user and check_password_hash(user.password_hash, data["password"]):
-            user.password_hash = generate_password_hash(data["newPassword"]).decode(
-                "utf-8"
-            )
+        if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
+            user.password_hash = bcrypt.generate_password_hash(
+                data["newPassword"]
+            ).decode("utf-8")
             db.session.commit()
             return make_response({"message": "Password updated successfully"}, 200)
         else:
@@ -140,62 +158,63 @@ class UserLoginResource(Resource):
     """
 
     def post(self):
-        """
-        Authenticates a user against stored credentials.
-        If successful, returns a JWT token for accessing protected endpoints.
-        """
         data = request.get_json()
+        # Check if both username and password are provided
+        if not data or "username" not in data or "password" not in data:
+            return make_response(
+                jsonify({"error": "Username and password are required"}), 400
+            )
+
         user = UserAuth.query.filter_by(username=data["username"]).first()
+
+        # Initialize bcrypt
+        bcrypt = Bcrypt()
+
         if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
-            # Create JWT token
-            access_token = create_access_token(identity=user.id)
-            # Set user information in Flask session
-            session["user_logged_in"] = True
+            # Set user info in session
             session["user_id"] = user.id
-            # Return JWT token
-            return jsonify(access_token=access_token), 200
+            session["username"] = user.username
+            session["logged_in"] = True
+
+            # Include additional user data in the response
+            response_data = {
+                "message": "Login successful",
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,  # Include any other relevant user data here
+            }
+
+            return make_response(jsonify(response_data), 200)
         else:
-            return {"error": "Invalid username or password. Please try again."}, 401
+            return make_response(
+                jsonify({"error": "Invalid username or password"}), 401
+            )
 
 
 class UserLogoutResource(Resource):
     def post(self):
         """
-        Handles the logout process for users. This method requires JWT authentication
-        to ensure that only logged-in users can initiate a logout.
+        Handles the logout process for users.
 
         Upon logout:
         - Clears the Flask session to remove any stored user information.
-        - Clears the 'access_token' cookie to remove the JWT token from the client browser.
         """
-        # Clear Flask session, removing all user information stored in session
         session.clear()
-
-        # Create a response indicating successful logout
-        resp = jsonify({"logout": True})
-
-        # Set the 'access_token' cookie to an empty value with an expiration date in the past
-        # This instructs the client browser to remove the cookie, effectively "forgetting" the JWT token
-        resp.set_cookie("access_token", "", expires=0)  # Clear the cookie
-
-        # Return the response with a 200 OK status, indicating a successful logout
-        return resp, 200
+        return jsonify(message="Logout successful"), 200
 
 
-@app.errorhandler(Exception)
-def handle_unexpected_error(error):
-    return (
-        jsonify({"error": "An unexpected error occurred", "details": str(error)}),
-        500,
-    )
+# @app.errorhandler(Exception)
+# def handle_unexpected_error(error):
+#     return (
+#         jsonify({"error": "An unexpected error occurred", "details": str(error)}),
+#         500,
+#     )
 
 
 class SessionCheckResource(Resource):
-    @jwt_required(optional=True)
     def get(self):
         try:
-            user_id = get_jwt_identity()
-            logging.info(f"User ID from JWT: {user_id}")
+            user_id = session.get("user_id")
             if user_id:
                 user = UserAuth.query.get(user_id)
                 if user:
@@ -218,7 +237,7 @@ class SessionCheckResource(Resource):
             else:
                 return jsonify({"authenticated": False}), 200
         except Exception as e:
-            logging.error(f"Error in SessionCheckResource: {e}")
+            logging.error(f"Error in SessionCheckResource: {str(e)}")
             return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 
@@ -232,20 +251,26 @@ class ShippingInfoSchema(ma.SQLAlchemyAutoSchema):
 
 
 class ShippingInfoResource(Resource):
-    @jwt_required()
     def get(self, user_id):
-        user = get_jwt_identity()
+        session_user_id = session.get("user_id")
+        if not session_user_id or str(session_user_id) != str(user_id):
+            return {"error": "Unauthorized access or user not found"}, 403
+
         shipping_info = ShippingInfo.query.filter_by(user_id=user_id).first()
-        if not shipping_info or user_id != user:
-            return {"error": "Shipping information not found or access denied."}, 404
+        if not shipping_info:
+            return {"error": "Shipping information not found"}, 404
+
         schema = ShippingInfoSchema()
         return schema.dump(shipping_info), 200
 
-    @jwt_required()
-    def post(self, user_id):
+    def post(self):
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"error": "Authentication required"}, 401
+
         user = UserAuth.query.get(user_id)
         if not user:
-            return make_response({"error": "User not found"}, 404)
+            return {"error": "User not found"}, 404
 
         shipping_data = request.get_json()
         shipping_info = ShippingInfo(
@@ -261,34 +286,33 @@ class ShippingInfoResource(Resource):
 
         db.session.add(shipping_info)
         db.session.commit()
-        return make_response({"message": "Shipping info added successfully"}, 201)
+        return {"message": "Shipping info added successfully"}, 201
 
-    @jwt_required()
-    def patch(self, user_id):
+    def patch(self):
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"error": "Authentication required"}, 401
+
         user = UserAuth.query.get(user_id)
         if not user or not user.shipping_info:
-            return make_response({"error": "Shipping info not found"}, 404)
+            return {"error": "Shipping info not found or unauthorized"}, 404
 
         shipping_data = request.get_json()
         shipping_info = user.shipping_info
-        shipping_info.address_line1 = shipping_data.get(
-            "address_line1", shipping_info.address_line1
-        )
-        shipping_info.address_line2 = shipping_data.get(
-            "address_line2", shipping_info.address_line2
-        )
-        shipping_info.city = shipping_data.get("city", shipping_info.city)
-        shipping_info.state = shipping_data.get("state", shipping_info.state)
-        shipping_info.postal_code = shipping_data.get(
-            "postal_code", shipping_info.postal_code
-        )
-        shipping_info.country = shipping_data.get("country", shipping_info.country)
-        shipping_info.phone_number = shipping_data.get(
-            "phone_number", shipping_info.phone_number
-        )
+        for field in [
+            "address_line1",
+            "address_line2",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "phone_number",
+        ]:
+            if field in shipping_data:
+                setattr(shipping_info, field, shipping_data[field])
 
         db.session.commit()
-        return make_response({"message": "Shipping info updated successfully"}, 200)
+        return {"message": "Shipping info updated successfully"}, 200
 
 
 class ProductSchema(ma.SQLAlchemyAutoSchema):
@@ -330,7 +354,6 @@ class ProductResource(Resource):
             products = Product.query.all()
             return jsonify([product.to_dict() for product in products])
 
-    @jwt_required()
     def post(self):
         schema = ProductSchema()
         try:
@@ -348,7 +371,6 @@ class ProductResource(Resource):
             db.session.rollback()
             return {"error": "Could not create the product due to internal error."}, 500
 
-    @jwt_required()
     def patch(self, product_id):
         product_data = request.get_json()
         product = Product.query.get(product_id)
@@ -364,7 +386,6 @@ class ProductResource(Resource):
         db.session.commit()
         return make_response({"message": "Product updated successfully"}, 200)
 
-    @jwt_required()
     def delete(self, product_id):
         product = Product.query.get(product_id)
         if not product:
@@ -381,7 +402,6 @@ class ColorResource(Resource):
         color = Color.query.get_or_404(color_id)
         return make_response(color.to_dict(), 200)
 
-    @jwt_required()
     def post(self):
         data = request.get_json()
         new_color = Color(name=data["name"])
@@ -389,7 +409,6 @@ class ColorResource(Resource):
         db.session.commit()
         return make_response(new_color.to_dict(), 201)
 
-    @jwt_required()
     def delete(self, color_id):
         color = Color.query.get_or_404(color_id)
         db.session.delete(color)
@@ -399,12 +418,10 @@ class ColorResource(Resource):
 
 # ChatMessage Resource
 class ChatMessageResource(Resource):
-    @jwt_required()
     def get(self, message_id):
         message = ChatMessage.query.get_or_404(message_id)
         return make_response(message.to_dict(), 200)
 
-    @jwt_required()
     def post(self):
         data = request.get_json()
         new_message = ChatMessage(
@@ -419,12 +436,10 @@ class ChatMessageResource(Resource):
 
 # Order Resource
 class OrderResource(Resource):
-    @jwt_required()
     def get(self, order_id):
         order = Order.query.get_or_404(order_id)
         return make_response(order.to_dict(), 200)
 
-    @jwt_required()
     def post(self):
         data = request.get_json()
         new_order = Order(
@@ -444,7 +459,6 @@ class OrderResource(Resource):
         db.session.commit()
         return make_response(new_order.to_dict(), 201)
 
-    @jwt_required()
     def delete(self, order_id):
         order = Order.query.get_or_404(order_id)
         db.session.delete(order)
@@ -456,7 +470,7 @@ class OrderResource(Resource):
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
-api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
+api.add_resource(ShippingInfoResource, "/shipping_info")
 api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
 api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
 api.add_resource(

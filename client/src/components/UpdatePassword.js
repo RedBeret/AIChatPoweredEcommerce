@@ -94,13 +94,13 @@ export default function UpdatePassword() {
                                 />
 
                                 <Field
-                                    name="password"
+                                    name="currentPassword"
                                     type="password"
                                     placeholder="Current Password"
                                     className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
                                 />
                                 <ErrorMessage
-                                    name="password"
+                                    name="currentPassword"
                                     component="div"
                                     className="text-red-500 text-xs mt-1"
                                 />

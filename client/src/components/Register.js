@@ -34,16 +34,17 @@ export default function Register() {
         );
         setSubmitting(false);
     };
+
     return (
         <main className="w-full max-w-md mx-auto p-6">
             {signupSuccess && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{signupSuccess}</span>
+                    {signupSuccess}
                 </div>
-            )}{" "}
+            )}
             {signupError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{signupError}</span>
+                    {signupError}
                 </div>
             )}
             <div className="mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -70,53 +71,93 @@ export default function Register() {
                     >
                         {({ isSubmitting }) => (
                             <Form className="mt-5">
-                                <Field
-                                    name="username"
-                                    type="text"
-                                    placeholder="Username"
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
-                                />
-                                <ErrorMessage
-                                    name="username"
-                                    component="div"
-                                    className="text-red-500 text-xs mt-1"
-                                />
+                                <div className="mb-4">
+                                    <label
+                                        htmlFor="username"
+                                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                    >
+                                        Username
+                                    </label>
+                                    <Field
+                                        id="username"
+                                        name="username"
+                                        type="text"
+                                        placeholder="Username"
+                                        autoComplete="username"
+                                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
+                                    />
+                                    <ErrorMessage
+                                        name="username"
+                                        component="div"
+                                        className="text-red-500 text-xs mt-1"
+                                    />
+                                </div>
 
-                                <Field
-                                    name="email"
-                                    type="email"
-                                    placeholder="Email"
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
-                                />
-                                <ErrorMessage
-                                    name="email"
-                                    component="div"
-                                    className="text-red-500 text-xs mt-1"
-                                />
+                                <div className="mb-4">
+                                    <label
+                                        htmlFor="email"
+                                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                    >
+                                        Email
+                                    </label>
+                                    <Field
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        placeholder="Email"
+                                        autoComplete="email"
+                                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
+                                    />
+                                    <ErrorMessage
+                                        name="email"
+                                        component="div"
+                                        className="text-red-500 text-xs mt-1"
+                                    />
+                                </div>
 
-                                <Field
-                                    name="password"
-                                    type="password"
-                                    placeholder="Password"
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
-                                />
-                                <ErrorMessage
-                                    name="password"
-                                    component="div"
-                                    className="text-red-500 text-xs mt-1"
-                                />
+                                <div className="mb-4">
+                                    <label
+                                        htmlFor="password"
+                                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                    >
+                                        Password
+                                    </label>
+                                    <Field
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        placeholder="Password"
+                                        autoComplete="new-password"
+                                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
+                                    />
+                                    <ErrorMessage
+                                        name="password"
+                                        component="div"
+                                        className="text-red-500 text-xs mt-1"
+                                    />
+                                </div>
 
-                                <Field
-                                    name="confirmPassword"
-                                    type="password"
-                                    placeholder="Confirm Password"
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
-                                />
-                                <ErrorMessage
-                                    name="confirmPassword"
-                                    component="div"
-                                    className="text-red-500 text-xs mt-1"
-                                />
+                                <div className="mb-6">
+                                    <label
+                                        htmlFor="confirmPassword"
+                                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                    >
+                                        Confirm Password
+                                    </label>
+                                    <Field
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        type="password"
+                                        placeholder="Confirm Password"
+                                        autoComplete="new-password"
+                                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
+                                    />
+                                    <ErrorMessage
+                                        name="confirmPassword"
+                                        component="div"
+                                        className="text-red-500 text-xs mt-1"
+                                    />
+                                </div>
 
                                 <button
                                     type="submit"

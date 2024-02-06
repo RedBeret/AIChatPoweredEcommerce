@@ -23,8 +23,8 @@ export default function CloseAccount() {
     const [success, setSuccess] = useState(null);
 
     const onSubmit = (values, { setSubmitting }) => {
-        dispatch(deleteUser(values, setError, setSuccess, history));
-
+        const { username, password } = values;
+        dispatch(deleteUser(username, password, setError, setSuccess, history));
         setSubmitting(false);
     };
 
