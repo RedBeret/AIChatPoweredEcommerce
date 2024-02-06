@@ -123,6 +123,7 @@ def seed_database():
                     order_id=order.id,
                     product_id=random.choice(product_ids),
                     quantity=random.randint(1, 3),
+                    color_id=random.choice(color_ids),
                 )
                 db.session.add(order_detail)
 

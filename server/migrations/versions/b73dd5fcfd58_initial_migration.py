@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: daa5f641d60b
+Revision ID: b73dd5fcfd58
 Revises: 
-Create Date: 2024-02-02 13:23:27.111255
+Create Date: 2024-02-05 20:19:23.260404
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'daa5f641d60b'
+revision = 'b73dd5fcfd58'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,6 +34,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('item_quantity', sa.Integer(), nullable=False),
     sa.Column('price', sa.Integer(), nullable=False),
     sa.Column('image_path', sa.String(length=255), nullable=True),
     sa.Column('imageAlt', sa.String(length=255), nullable=True),
@@ -90,16 +91,20 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('confirmation_num', sa.String(length=36), nullable=False),
     sa.Column('shipping_info_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['shipping_info_id'], ['shipping_info.id'], name=op.f('fk_orders_shipping_info_id_shipping_info')),
     sa.ForeignKeyConstraint(['user_id'], ['user_auth.id'], name=op.f('fk_orders_user_id_user_auth')),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('confirmation_num')
     )
     op.create_table('order_details',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('order_id', sa.Integer(), nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
+    sa.Column('color_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['color_id'], ['colors.id'], name=op.f('fk_order_details_color_id_colors')),
     sa.ForeignKeyConstraint(['order_id'], ['orders.id'], name=op.f('fk_order_details_order_id_orders')),
     sa.ForeignKeyConstraint(['product_id'], ['products.id'], name=op.f('fk_order_details_product_id_products')),
     sa.PrimaryKeyConstraint('id')

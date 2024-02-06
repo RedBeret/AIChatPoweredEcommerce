@@ -252,17 +252,25 @@ class ShippingInfoSchema(ma.SQLAlchemyAutoSchema):
 
 class ShippingInfoResource(Resource):
     def get(self, user_id):
-        user = get_jwt_identity()
+        session_user_id = session.get("user_id")
+        if not session_user_id or str(session_user_id) != str(user_id):
+            return {"error": "Unauthorized access or user not found"}, 403
+
         shipping_info = ShippingInfo.query.filter_by(user_id=user_id).first()
-        if not shipping_info or user_id != user:
-            return {"error": "Shipping information not found or access denied."}, 404
+        if not shipping_info:
+            return {"error": "Shipping information not found"}, 404
+
         schema = ShippingInfoSchema()
         return schema.dump(shipping_info), 200
 
-    def post(self, user_id):
+    def post(self):
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"error": "Authentication required"}, 401
+
         user = UserAuth.query.get(user_id)
         if not user:
-            return make_response({"error": "User not found"}, 404)
+            return {"error": "User not found"}, 404
 
         shipping_data = request.get_json()
         shipping_info = ShippingInfo(
@@ -278,33 +286,33 @@ class ShippingInfoResource(Resource):
 
         db.session.add(shipping_info)
         db.session.commit()
-        return make_response({"message": "Shipping info added successfully"}, 201)
+        return {"message": "Shipping info added successfully"}, 201
 
-    def patch(self, user_id):
+    def patch(self):
+        user_id = session.get("user_id")
+        if not user_id:
+            return {"error": "Authentication required"}, 401
+
         user = UserAuth.query.get(user_id)
         if not user or not user.shipping_info:
-            return make_response({"error": "Shipping info not found"}, 404)
+            return {"error": "Shipping info not found or unauthorized"}, 404
 
         shipping_data = request.get_json()
         shipping_info = user.shipping_info
-        shipping_info.address_line1 = shipping_data.get(
-            "address_line1", shipping_info.address_line1
-        )
-        shipping_info.address_line2 = shipping_data.get(
-            "address_line2", shipping_info.address_line2
-        )
-        shipping_info.city = shipping_data.get("city", shipping_info.city)
-        shipping_info.state = shipping_data.get("state", shipping_info.state)
-        shipping_info.postal_code = shipping_data.get(
-            "postal_code", shipping_info.postal_code
-        )
-        shipping_info.country = shipping_data.get("country", shipping_info.country)
-        shipping_info.phone_number = shipping_data.get(
-            "phone_number", shipping_info.phone_number
-        )
+        for field in [
+            "address_line1",
+            "address_line2",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "phone_number",
+        ]:
+            if field in shipping_data:
+                setattr(shipping_info, field, shipping_data[field])
 
         db.session.commit()
-        return make_response({"message": "Shipping info updated successfully"}, 200)
+        return {"message": "Shipping info updated successfully"}, 200
 
 
 class ProductSchema(ma.SQLAlchemyAutoSchema):
@@ -462,7 +470,7 @@ class OrderResource(Resource):
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
-api.add_resource(ShippingInfoResource, "/user/<int:user_id>/shipping_info")
+api.add_resource(ShippingInfoResource, "/shipping_info")
 api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
 api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
 api.add_resource(
