@@ -22,25 +22,19 @@ export const CartWrapper = ({ children }) => {
         });
     };
 
-    const addToCart = (product, color) => {
+    const addToCart = (product) => {
         setCartItems((currentItems) => {
-            // Check if the product with the same color is already in the cart
             const isProductInCart = currentItems.some(
-                (item) => item.id === product.id && item.color === color
+                (item) => item.id === product.id
             );
             if (isProductInCart) {
-                // If the product with the same color is already in the cart, update the quantity
                 return currentItems.map((item) =>
-                    item.id === product.id && item.color === color
+                    item.id === product.id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             } else {
-                // If the product with the same color is not in the cart, add a new item
-                return [
-                    ...currentItems,
-                    { ...product, quantity: 1, color: color },
-                ];
+                return [...currentItems, { ...product, quantity: 1 }];
             }
         });
     };

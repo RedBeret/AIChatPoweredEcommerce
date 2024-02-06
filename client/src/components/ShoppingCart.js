@@ -3,21 +3,16 @@ import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { useCartContext } from "../components/CartContext";
-import { useDispatch, useSelector } from "react-redux";
-import {
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-} from "../store/actions/cartActions";
 
 export default function ShoppingCart({ open, setOpen }) {
-    const dispatch = useDispatch();
-    const { cartItems } = useSelector((state) => state.cart);
+    const { cartItems, updateQuantity, removeFromCart } = useCartContext();
 
     const calculateTotal = () => {
-        return cartItems
-            .reduce((total, item) => total + item.price * item.quantity, 0)
-            .toFixed(2);
+        const total = cartItems.reduce(
+            (total, item) => total + item.price * item.quantity,
+            0
+        );
+        return (total / 100).toFixed(2);
     };
 
     return (
@@ -89,7 +84,7 @@ export default function ShoppingCart({ open, setOpen }) {
                                                                 >
                                                                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                                         <img
-                                                                            src={`/assets/${product.image_url}`}
+                                                                            src={`/static/${product.image_path}`}
                                                                             alt={
                                                                                 product.name
                                                                             }
@@ -106,7 +101,10 @@ export default function ShoppingCart({ open, setOpen }) {
                                                                                 </h3>
                                                                                 <p className="ml-4">
                                                                                     $
-                                                                                    {product.price.toFixed(
+                                                                                    {(
+                                                                                        product.price /
+                                                                                        100
+                                                                                    ).toFixed(
                                                                                         2
                                                                                     )}
                                                                                 </p>

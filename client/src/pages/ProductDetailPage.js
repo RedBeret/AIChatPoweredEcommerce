@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { useCartContext } from "../components/CartContext";
 import { RadioGroup } from "@headlessui/react";
+import { useDispatch } from "react-redux";
+
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
 }

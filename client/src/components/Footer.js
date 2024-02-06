@@ -109,7 +109,7 @@ export default function Footer() {
                         <ul className="mt-4 space-y-2">
                             <li>
                                 <Link
-                                    to="/login"
+                                    to="/auth/login"
                                     className="text-gray-600 hover:text-blue-500 dark:hover:text-blue-400"
                                 >
                                     Log In
@@ -117,7 +117,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    to="/signup"
+                                    to="/auth/register"
                                     className="text-gray-600 hover:text-blue-500 dark:hover:text-blue-400"
                                 >
                                     Sign Up
@@ -125,7 +125,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    to="/updatepassword"
+                                    to="/auth/updatepassword"
                                     className="text-gray-600 hover:text-blue-500 dark:hover:text-blue-400"
                                 >
                                     Update Account
@@ -133,7 +133,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    to="/deleteuser"
+                                    to="/auth/closeaccount"
                                     className="text-gray-600 hover:text-blue-500 dark:hover:text-blue-400"
                                 >
                                     Delete Account
