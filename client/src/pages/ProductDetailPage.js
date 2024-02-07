@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { useCartContext } from "../components/CartContext";
 import { RadioGroup } from "@headlessui/react";
-import { useDispatch } from "react-redux";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
@@ -26,7 +25,7 @@ export default function ProductDetail() {
                 const data = await response.json();
                 setProduct(data);
                 setSelectedColor(
-                    data.colors?.length > 0 ? data.colors[0].name : ""
+                    data.colors?.length > 0 ? data.colors[0] : null
                 );
             } catch (error) {
                 console.error("Error fetching product:", error);
@@ -101,7 +100,7 @@ export default function ProductDetail() {
                                     {product.colors.map((color, index) => (
                                         <RadioGroup.Option
                                             key={index}
-                                            value={color.name}
+                                            value={color}
                                             className={({ active, checked }) =>
                                                 classNames(
                                                     "relative p-0.5 rounded-full flex items-center justify-center cursor-pointer focus:outline-none",

@@ -1,12 +1,12 @@
 //authActions.js
 export const authenticateUser =
-    (username, password, setError, history) => async (dispatch) => {
+    (username, password, setLoginError, setLoginSuccess, history) =>
+    async (dispatch) => {
         dispatch({ type: "AUTH_START" });
         try {
             const response = await fetch("/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",
                 body: JSON.stringify({ username, password }),
             });
 
@@ -16,29 +16,18 @@ export const authenticateUser =
             }
 
             const data = await response.json();
-            if (data && data.user_id) {
-                const user = {
-                    id: data.user_id,
-                    username: data.username,
-                    email: data.email,
-                };
-
-                dispatch({
-                    type: "AUTH_SUCCESS",
-                    payload: {
-                        user,
-                    },
-                });
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 1000);
-            } else {
-                throw new Error("Login successful but user data not found.");
-            }
+            dispatch({
+                type: "AUTH_SUCCESS",
+                payload: {
+                    user: data,
+                },
+            });
+            setLoginSuccess("Login successful");
+            // history.push("/");
         } catch (error) {
             console.error("Error during login:", error);
-            dispatch({ type: "AUTH_FAIL", payload: error.toString() });
-            setError(error.toString());
+            dispatch({ type: "AUTH_FAIL" });
+            setLoginError(error.toString());
         }
     };
 
@@ -55,13 +44,12 @@ export const checkLoginSession = () => async (dispatch) => {
             return;
         }
 
-        // Assuming your backend sends user data upon successful session check
         const data = await response.json();
         if (data && data.user) {
             dispatch({
                 type: "AUTH_SUCCESS",
                 payload: {
-                    user: data.user, // Adjust according to actual response structure
+                    user: data.user,
                 },
             });
         } else {
@@ -92,7 +80,7 @@ export const registerUser =
 
             dispatch({ type: "AUTH_SUCCESS", payload: { user: data.user } });
             setSignupSuccess("Signup successful!");
-            setTimeout(() => history.push("/"), 1000);
+            // setTimeout(() => history.push("/"), 1000);
         } catch (error) {
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });
@@ -158,3 +146,18 @@ export const deleteUser =
             setError(error.message);
         }
     };
+
+export const logoutUser = (history) => async (dispatch) => {
+    dispatch({ type: "AUTH_START" });
+    try {
+        await fetch("/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+    } catch (error) {
+        console.error("Error during logout:", error);
+    } finally {
+        dispatch({ type: "AUTH_LOGOUT" });
+        history.push("/auth/login");
+    }
+};

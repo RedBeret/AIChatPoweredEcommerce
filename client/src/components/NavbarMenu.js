@@ -1,7 +1,10 @@
 import React, { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import ShoppingCart from "./ShoppingCart";
-import { Link } from "react-router-dom";
+import { logoutUser } from "../store/actions/authActions";
+import { useHistory, Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+
 import {
     Bars3Icon,
     MagnifyingGlassIcon,
@@ -13,9 +16,19 @@ import { useCartContext } from "./CartContext";
 
 // Main component
 export default function NavbarMenu() {
+    const { cartItems } = useCartContext();
     const [cartOpen, setCartOpen] = useState(false);
     const [open, setOpen] = useState(false);
-    const { cartItems } = useCartContext();
+    const dispatch = useDispatch();
+    const history = useHistory();
+    const totalItemsInCart = cartItems.reduce(
+        (total, currentItem) => total + currentItem.quantity,
+        0
+    );
+
+    const handleLogout = () => {
+        dispatch(logoutUser(history));
+    };
     const handleCloseMenu = () => {
         setOpen(false);
     };
@@ -199,6 +212,12 @@ export default function NavbarMenu() {
                                 >
                                     Sign in
                                 </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="text-sm font-medium text-black hover:text-gray-300 cursor-pointer"
+                                >
+                                    Log Out
+                                </button>
                                 <span
                                     className="h-6 w-px bg-gray-600"
                                     aria-hidden="true"
@@ -235,7 +254,7 @@ export default function NavbarMenu() {
                                         aria-hidden="true"
                                     />
                                     <span className="ml-2 text-sm font-medium text-black group-hover:text-gray-300">
-                                        {cartItems.length}
+                                        {totalItemsInCart}{" "}
                                     </span>
                                     <span className="sr-only">
                                         items in cart, view bag

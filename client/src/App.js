@@ -51,10 +51,7 @@ export default function App() {
                         />
                         <Route path="/about" component={About} />
                         <Route path="/checkout" component={Checkout} />
-                        <ProtectedRoute
-                            path="/confirmation"
-                            component={Confirmation}
-                        />
+                        <Route path="/confirmation" component={Confirmation} />
                         <Route path="/auth" component={AuthPages} />
                         <Route path="/contact" component={Contact} />
                         {/* <Route
