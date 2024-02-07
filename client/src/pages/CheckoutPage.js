@@ -13,6 +13,8 @@ const Checkout = () => {
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const history = useHistory();
+    const [signupSuccess, setSignupSuccess] = useState("");
+
     const [error, setError] = useState("");
     const [signupError, setSignupError] = useState("");
 
@@ -42,25 +44,7 @@ const Checkout = () => {
             .reduce((total, item) => total + item.price * item.quantity, 0)
             .toFixed(2);
     };
-    // const handleUserAuthentication = async (values) => {
-    //     try {
-    //         await dispatch(authenticateUser(values.username, values.password));
-    //         console.log("User authenticated successfully");
-    //     } catch (error) {
-    //         console.log(
-    //             "Authentication failed, attempting registration",
-    //             error
-    //         );
-    //         await dispatch(
-    //             registerUser({
-    //                 username: values.username,
-    //                 password: values.password,
-    //                 email: values.email,
-    //             })
-    //         );
-    //         console.log("User registered and authenticated successfully");
-    //     }
-    // };
+
     const handleFormSubmit = async (values, actions) => {
         console.log("Form submission started", values);
         let currentUser = user;
@@ -70,16 +54,11 @@ const Checkout = () => {
         if (!isAuthenticated) {
             try {
                 await dispatch(
-                    registerUser(
-                        {
-                            username: values.username,
-                            password: values.password,
-                            email: values.email,
-                        },
-                        setSignupError, // Pass the setSignupError function here
-                        () => console.log("Signup successful!"), // Directly passing a success message function for demonstration
-                        history
-                    )
+                    registerUser({
+                        username: values.username,
+                        password: values.password,
+                        email: values.email,
+                    })
                 );
                 console.log("Registration successful");
             } catch (registrationError) {
@@ -89,11 +68,13 @@ const Checkout = () => {
                 return;
             }
         }
-        console.log("Authenticated...");
 
         try {
-            // Create shipping information
-            console.log("Creating shipping information...");
+            console.log("Authenticated, processing checkout...");
+
+            if (!currentUser || !currentUser.id) {
+                throw new Error("Current user is not properly set.");
+            }
 
             const shippingInfo = {
                 user_id: currentUser.id,
@@ -111,18 +92,20 @@ const Checkout = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(shippingInfo),
             });
+
             if (!shippingResponse.ok) {
-                throw new Error("Failed to fetch shipping information.");
+                const errorResponse = await shippingResponse.json();
+                throw new Error(
+                    errorResponse.error ||
+                        "Failed to create shipping information."
+                );
             }
 
             const shippingData = await shippingResponse.json();
-            console.log(shippingData);
-            const shippingInfoId = shippingData.id;
             console.log(
                 "Shipping information created successfully",
                 shippingData
             );
-            console.log("Creating order with order details");
 
             const orderDetails = cartItems.map((item) => ({
                 product_id: item.id,
@@ -135,14 +118,19 @@ const Checkout = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     user_id: currentUser.id,
-                    shipping_info_id: shippingInfoId,
+                    shipping_info_id: shippingData.id,
                     confirmation_num: uuidv4(),
                     order_details: orderDetails,
                 }),
             });
+
             if (!orderResponse.ok) {
-                throw new Error("Failed to create order.");
+                const errorResponse = await orderResponse.json();
+                throw new Error(
+                    errorResponse.error || "Failed to create order."
+                );
             }
+
             const orderData = await orderResponse.json();
             console.log("Order created successfully", orderData);
             actions.setSubmitting(false);
@@ -156,6 +144,17 @@ const Checkout = () => {
 
     return (
         <div className="container mx-auto p-4">
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    {error}
+                </div>
+            )}
+            {signupSuccess && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                    {signupSuccess}
+                </div>
+            )}
+
             <h1 className="text-3xl font-bold mb-4">Checkout</h1>
             {error && <div className="text-red-500">{error}</div>}
 
