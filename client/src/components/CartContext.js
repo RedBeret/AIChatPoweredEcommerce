@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { useSelector } from "react-redux";
 
 const CartContext = createContext();
 
@@ -6,6 +7,7 @@ export const useCartContext = () => useContext(CartContext);
 
 export const CartWrapper = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
+    const user = useSelector((state) => state.auth.user);
 
     const removeFromCart = (productId) => {
         setCartItems(cartItems.filter((item) => item.id !== productId));
@@ -22,19 +24,32 @@ export const CartWrapper = ({ children }) => {
         });
     };
 
-    const addToCart = (product) => {
+    const addToCart = (product, color, quantity = 1) => {
         setCartItems((currentItems) => {
-            const isProductInCart = currentItems.some(
-                (item) => item.id === product.id
+            const existingProductIndex = currentItems.findIndex(
+                (item) => item.id === product.id && item.colorId === color.id
             );
-            if (isProductInCart) {
-                return currentItems.map((item) =>
-                    item.id === product.id
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
+
+            if (existingProductIndex >= 0) {
+                const updatedItems = currentItems.map((item, index) => {
+                    if (index === existingProductIndex) {
+                        return { ...item, quantity: item.quantity + quantity };
+                    }
+                    return item;
+                });
+                return updatedItems;
             } else {
-                return [...currentItems, { ...product, quantity: 1 }];
+                const newItem = {
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image_path: product.image_path,
+                    color: color.name,
+                    colorId: color.id,
+                    quantity,
+                    userId: user?.id,
+                };
+                return [...currentItems, newItem];
             }
         });
     };

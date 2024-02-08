@@ -3,14 +3,19 @@
 # Standard library imports
 import logging
 import os
+from calendar import c
+from time import sleep
 
 import bcrypt
+import openai
+
+# from app_utils import create_assistant
 from config import api, app, db, ma
 from dotenv import load_dotenv
-from flask import jsonify, make_response, request, session
+from flask import Flask, jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
 from flask_marshmallow import fields
-from flask_restful import Resource
+from flask_restful import Resource, reqparse
 from marshmallow import Schema, ValidationError, fields, post_dump, validate
 from models import (
     ChatMessage,
@@ -21,6 +26,8 @@ from models import (
     ShippingInfo,
     UserAuth,
 )
+from openai import OpenAI
+from packaging import version
 from sqlalchemy.exc import IntegrityError
 
 # Local imports
@@ -264,15 +271,12 @@ class ShippingInfoResource(Resource):
         return schema.dump(shipping_info), 200
 
     def post(self):
-        user_id = session.get("user_id")
-        if not user_id:
-            return {"error": "Authentication required"}, 401
-
-        user = UserAuth.query.get(user_id)
-        if not user:
-            return {"error": "User not found"}, 404
-
         shipping_data = request.get_json()
+        user_id = shipping_data.get("user_id")
+
+        if not user_id:
+            return {"error": "User ID is required"}, 400
+
         shipping_info = ShippingInfo(
             user_id=user_id,
             address_line1=shipping_data["address_line1"],
@@ -286,7 +290,12 @@ class ShippingInfoResource(Resource):
 
         db.session.add(shipping_info)
         db.session.commit()
-        return {"message": "Shipping info added successfully"}, 201
+        return (
+            jsonify(
+                {"message": "Shipping info added successfully", "id": shipping_info.id}
+            ),
+            201,
+        )
 
     def patch(self):
         user_id = session.get("user_id")
@@ -416,24 +425,6 @@ class ColorResource(Resource):
         return make_response({"message": "Color deleted successfully"}, 200)
 
 
-# ChatMessage Resource
-class ChatMessageResource(Resource):
-    def get(self, message_id):
-        message = ChatMessage.query.get_or_404(message_id)
-        return make_response(message.to_dict(), 200)
-
-    def post(self):
-        data = request.get_json()
-        new_message = ChatMessage(
-            user_id=data["user_id"],
-            message=data["message"],
-            response=data.get("response", ""),
-        )
-        db.session.add(new_message)
-        db.session.commit()
-        return make_response(new_message.to_dict(), 201)
-
-
 # Order Resource
 class OrderResource(Resource):
     def get(self, order_id):
@@ -466,7 +457,99 @@ class OrderResource(Resource):
         return make_response({"message": "Order deleted successfully"}, 200)
 
 
+# --------------------------------- Chatbot Resource ---------------------------------#
+# Check OpenAI version is correct
+# required_version = version.parse("1.1.1")
+# current_version = version.parse(openai.__version__)
+# OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+# if current_version < required_version:
+#     raise ValueError(
+#         f"Error: OpenAI version {openai.__version__}"
+#         " is less than the required version 1.1.1"
+#     )
+# else:
+#     print("OpenAI version is compatible.")
+
+# # Init client
+# client = OpenAI(api_key=OPENAI_API_KEY)
+
+# # Create new assistant or load existing
+# assistant_id = create_assistant(client)
+
+
+# # Start conversation thread
+# class OpenAIStartConversation(Resource):
+#     def start_conversation():
+#         print("Starting a new conversation...")  # Debugging line
+#         thread = client.beta.threads.create()
+#         print(f"New thread created with ID: {thread.id}")  # Debugging line
+#         return jsonify({"thread_id": thread.id})
+
+
+# # Generate response
+# class OpenAIChat(Resource):
+#     def chat():
+#         data = request.json
+#         thread_id = data.get("thread_id")
+#         user_input = data.get("message", "")
+
+#         if not thread_id:
+#             print("Error: Missing thread_id")  # Debugging line
+#             return jsonify({"error": "Missing thread_id"}), 400
+
+#         print(
+#             f"Received message: {user_input} for thread ID: {thread_id}"
+#         )  # Debugging line
+
+#         # Add the user's message to the thread
+#         client.beta.threads.messages.create(
+#             thread_id=thread_id, role="user", content=user_input
+#         )
+
+#         # Run the Assistant
+#         run = client.beta.threads.runs.create(
+#             thread_id=thread_id, assistant_id=assistant_id
+#         )
+
+#         # Check if the Run requires action (function call)
+#         while True:
+#             run_status = client.beta.threads.runs.retrieve(
+#                 thread_id=thread_id, run_id=run.id
+#             )
+#             print(f"Run status: {run_status.status}")
+#             if run_status.status == "completed":
+#                 break
+#             sleep(1)  # Wait for a second before checking again
+
+#         # Retrieve and return the latest message from the assistant
+#         messages = client.beta.threads.messages.list(thread_id=thread_id)
+#         response = messages.data[0].content[0].text.value
+
+#         print(f"Assistant response: {response}")  # Debugging line
+#         return jsonify({"response": response})
+
+
+# ChatMessage Resource
+class ChatMessageResource(Resource):
+    def get(self, message_id):
+        message = ChatMessage.query.get_or_404(message_id)
+        return make_response(message.to_dict(), 200)
+
+    def post(self):
+        data = request.get_json()
+        new_message = ChatMessage(
+            user_id=data["user_id"],
+            message=data["message"],
+            response=data.get("response", ""),
+        )
+        db.session.add(new_message)
+        db.session.commit()
+        return make_response(new_message.to_dict(), 201)
+
+
 # Routing
+# api.add_resource(OpenAIStartConversation, "/start")
+# api.add_resource(OpenAIChat, "/chat")
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
