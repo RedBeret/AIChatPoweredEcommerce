@@ -145,9 +145,9 @@ const Checkout = () => {
             {Error && <div className="text-red-500">{Error}</div>}
 
             <div className="mb-6">
-                {cartItems.map((item) => (
+                {cartItems.map((item, index) => (
                     <div
-                        key={item.id}
+                        key={item.id + (item.colorId || `-${index}`)} // Combining ID and colorId or index
                         className="flex justify-between items-center bg-white p-4 rounded-md mb-2 shadow"
                     >
                         <div className="flex items-center">
@@ -162,7 +162,7 @@ const Checkout = () => {
                                     Quantity: {item.quantity}
                                 </p>
                                 <p className="text-sm text-gray-500">
-                                    Color: {item.color}{" "}
+                                    Color: {item.color}
                                 </p>
                             </div>
                         </div>

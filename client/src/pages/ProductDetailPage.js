@@ -96,7 +96,7 @@ export default function ProductDetail() {
                                     <div className="flex items-center space-x-3">
                                         {product.colors.map((color, index) => (
                                             <RadioGroup.Option
-                                                key={index}
+                                                key={`${id}-${color.id}`}
                                                 value={color}
                                                 className={({ checked }) =>
                                                     classNames(

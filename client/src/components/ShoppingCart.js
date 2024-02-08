@@ -75,11 +75,12 @@ export default function ShoppingCart({ open, setOpen }) {
                                                         className="-my-6 divide-y divide-gray-200"
                                                     >
                                                         {cartItems.map(
-                                                            (product) => (
+                                                            (
+                                                                product,
+                                                                index
+                                                            ) => (
                                                                 <li
-                                                                    key={
-                                                                        product.id
-                                                                    }
+                                                                    key={`${product.id}-${product.color}-${index}`}
                                                                     className="flex py-6"
                                                                 >
                                                                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
