@@ -31,7 +31,6 @@ export const createShippingInfo = (shippingData) => async (dispatch) => {
         const data = await response.json();
 
         if (!response.ok) {
-            // Assuming that the server's response will contain an 'error' field in the JSON body if there is an error
             dispatch(
                 createShippingInfoFail(
                     data.error || "Failed to create shipping information."
@@ -39,15 +38,15 @@ export const createShippingInfo = (shippingData) => async (dispatch) => {
             );
             return {
                 error: data.error || "Failed to create shipping information.",
-            }; // Return an object containing the error
+            };
         }
 
         console.log("Shipping info created:", data);
         dispatch(createShippingInfoSuccess(data));
-        return { payload: data }; // Return an object containing the payload
+        return { payload: data };
     } catch (error) {
         console.error("Error creating shipping info:", error);
         dispatch(createShippingInfoFail(error.toString()));
-        return { error: error.toString() }; // Return an object containing the error
+        return { error: error.toString() };
     }
 };

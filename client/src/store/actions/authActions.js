@@ -75,13 +75,15 @@ export const registerUser =
                 throw new Error(data.error || "Signup failed");
             }
 
-            dispatch({ type: "AUTH_SUCCESS", payload: { user: data } });
+            dispatch({ type: "AUTH_SUCCESS", payload: data });
             setSuccess("Signup successful!");
+            return { payload: { user: data.user } };
             // setTimeout(() => history.push("/"), 1000);
         } catch (error) {
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });
             setError(error.toString());
+            return { error: { message: error.message } };
         }
     };
 

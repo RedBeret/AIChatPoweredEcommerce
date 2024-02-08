@@ -18,7 +18,6 @@ export const createOrderFail = (error) => ({
     payload: error,
 });
 
-// Async Action Creator for creating an order
 export const createOrder = (orderDetails) => async (dispatch) => {
     dispatch(createOrderStart());
     try {
@@ -35,7 +34,9 @@ export const createOrder = (orderDetails) => async (dispatch) => {
 
         const data = await response.json();
         dispatch(createOrderSuccess(data));
+        return { payload: data };
     } catch (error) {
         dispatch(createOrderFail(error.message));
+        return { error: error.message };
     }
 };

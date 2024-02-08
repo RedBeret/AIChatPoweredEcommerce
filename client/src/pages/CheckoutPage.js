@@ -17,7 +17,6 @@ const Checkout = () => {
     const history = useHistory();
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     // Validation Schema for checkout form fields
     const CheckoutSchema = Yup.object().shape({
@@ -41,12 +40,6 @@ const Checkout = () => {
             : Yup.string(),
     });
 
-    const calculateTotal = () => {
-        return cartItems
-            .reduce((total, item) => total + item.price * item.quantity, 0)
-            .toFixed(2);
-    };
-
     const handleFormSubmit = async (values, { setSubmitting }) => {
         console.log("Starting checkout process...");
 
@@ -69,16 +62,13 @@ const Checkout = () => {
                         history
                     )
                 );
-                await sleep(500);
+                console.log("Registration response:", registrationResponse);
                 if (
                     !registrationResponse.payload ||
                     registrationResponse.error
                 ) {
                     throw new Error("Registration process failed.");
                 }
-
-                userId = registrationResponse.payload.id;
-                console.log("User registered:", registrationResponse.payload);
                 setSuccess(
                     "Registration successful. Proceeding with checkout..."
                 );
@@ -86,9 +76,7 @@ const Checkout = () => {
                     "User registered successfully. Proceeding with checkout..."
                 );
             }
-            await sleep(500);
-            console.log("User ID:", userId);
-            await sleep(500);
+
             const shippingInfo = {
                 address_line1: values.addressLine1,
                 address_line2: values.addressLine2 || "",
@@ -108,13 +96,7 @@ const Checkout = () => {
                 throw new Error("Failed to create shipping information.");
             }
 
-            console.log(
-                "Shipping information created successfully:",
-                shippingResponse.payload
-            );
-            await sleep(500);
             const orderDetails = {
-                user_id: userId,
                 shipping_info_id: shippingResponse.payload.shippingInfo.id,
                 confirmation_num: uuidv4(),
                 order_details: cartItems.map((item) => ({
@@ -127,7 +109,6 @@ const Checkout = () => {
             console.log("Order details:", orderDetails);
             const orderResponse = await dispatch(createOrder(orderDetails));
             console.log("Order response:", orderResponse);
-
             if (!orderResponse.payload || orderResponse.error) {
                 throw new Error(
                     orderResponse?.error?.message || "Checkout process failed."
@@ -136,7 +117,9 @@ const Checkout = () => {
 
             console.log("Order created successfully:", orderResponse.payload);
             setSuccess("Checkout successful!");
-            history.push("/confirmation");
+            const confirmationNumber =
+                orderResponse.payload.order.confirmation_num;
+            history.push("/confirmation", { confirmationNumber });
         } catch (err) {
             setError(err.message || "Checkout process failed.");
             console.error("Checkout error:", err);
@@ -188,7 +171,15 @@ const Checkout = () => {
                         </span>
                     </div>
                 ))}
-                <p className="text-xl font-bold">Total: ${calculateTotal()}</p>
+                <p className="text-xl font-bold">
+                    Total: $
+                    {(
+                        cartItems.reduce(
+                            (total, item) => total + item.price * item.quantity,
+                            0
+                        ) / 100
+                    ).toFixed(2)}
+                </p>
             </div>
 
             <Formik
