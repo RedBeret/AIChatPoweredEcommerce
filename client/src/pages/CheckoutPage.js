@@ -147,7 +147,7 @@ const Checkout = () => {
             <div className="mb-6">
                 {cartItems.map((item, index) => (
                     <div
-                        key={item.id + (item.colorId || `-${index}`)} // Combining ID and colorId or index
+                        key={item.id + (item.colorId || `-${index}`)}
                         className="flex justify-between items-center bg-white p-4 rounded-md mb-2 shadow"
                     >
                         <div className="flex items-center">
