@@ -22,7 +22,14 @@ export default function ProductDetail() {
     useEffect(() => {
         dispatch(fetchProduct(id));
     }, [dispatch, id]);
-
+    useEffect(() => {
+        if (product && product.colors.length > 0) {
+            const blackColorOption = product.colors.find(
+                (color) => color.name.toLowerCase() === "black"
+            );
+            setSelectedColor(blackColorOption || product.colors[0]);
+        }
+    }, [product]);
     if (error) {
         return <p className="text-center text-red-600">{error}</p>;
     }
