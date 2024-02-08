@@ -107,7 +107,6 @@ class UserAuthResource(Resource):
         if UserAuth.query.filter_by(email=email).first():
             return make_response(jsonify({"error": "Email already exists"}), 409)
 
-        # Hashing password with bcrypt
         hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
 
         new_user = UserAuth(
@@ -116,8 +115,20 @@ class UserAuthResource(Resource):
         db.session.add(new_user)
         db.session.commit()
 
+        session["user_id"] = new_user.id
+        session["username"] = new_user.username
+        session["logged_in"] = True
+
         return make_response(
-            jsonify({"message": "User created successfully", "id": new_user.id}), 201
+            jsonify(
+                {
+                    "message": "User created successfully and logged in",
+                    "id": new_user.id,
+                    "username": new_user.username,
+                    "email": new_user.email,
+                }
+            ),
+            201,
         )
 
     def delete(self):
@@ -278,7 +289,6 @@ class ShippingInfoResource(Resource):
         if not shipping_data:
             return make_response(jsonify({"error": "No data provided"}), 400)
 
-        # Validate required fields
         required_fields = [
             "address_line1",
             "city",
@@ -311,7 +321,6 @@ class ShippingInfoResource(Resource):
             db.session.add(shipping_info)
             db.session.commit()
 
-            # Manually constructing the response
             response_data = {
                 "id": shipping_info.id,
                 "address_line1": shipping_info.address_line1,
@@ -335,7 +344,7 @@ class ShippingInfoResource(Resource):
 
         except KeyError as e:
             return make_response(jsonify({"error": f"Missing field in data: {e}"}), 400)
-        except Exception as e:  # Consider narrowing down the exceptions
+        except Exception as e:
             db.session.rollback()
             return make_response(
                 jsonify({"error": "Failed to add shipping info", "details": str(e)}),
@@ -482,7 +491,8 @@ class OrderResource(Resource):
             data = request.get_json()
 
             new_order = Order(
-                user_id=data["user_id"], shipping_info_id=data.get("shipping_info_id")
+                user_id=session.get("user_id"),
+                shipping_info_id=data.get("shipping_info_id"),
             )
             db.session.add(new_order)
             db.session.flush()
