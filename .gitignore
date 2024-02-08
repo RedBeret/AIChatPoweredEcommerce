@@ -66,3 +66,4 @@ instance
 package-lock.json
 instance/
 db.sqlite3
+flask_session/
