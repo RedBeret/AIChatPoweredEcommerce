@@ -1,3 +1,4 @@
+import re  # Regular expression library for email validation
 import uuid
 from datetime import datetime
 
@@ -12,7 +13,7 @@ from config import bcrypt, db  # Configuration for database and bcrypt for hashi
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
-from sqlalchemy_serializer import SerializerMixin  # For serializing models
+from sqlalchemy_serializer import SerializerMixin
 
 
 # UserAuth model to store user authentication details like username, email, and password hash.
@@ -33,6 +34,20 @@ class UserAuth(db.Model, SerializerMixin):
 
     openai_interactions = db.relationship("OpenAIInteraction", back_populates="user")
     orders = db.relationship("Order", back_populates="user")
+
+    @validates("email")
+    def validate_email(self, key, address):
+        # Validate email format
+        assert re.match("[^@]+@[^@]+\.[^@]+", address), "Invalid email address"
+        # Validate email length
+        assert len(address) >= 3, f"{key} must be at least 3 characters long"
+        return address
+
+    @validates("username")
+    def validate_username(self, key, value):
+        # Validate username length
+        assert len(value) >= 3, f"{key} must be at least 3 characters long"
+        return value
 
     # Ensures password field is write-only for security reasons
     @hybrid_property
@@ -68,6 +83,16 @@ class ShippingInfo(db.Model, SerializerMixin):
     postal_code = db.Column(db.String(20), nullable=False)
     country = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
+
+    @validates("postal_code")
+    def validate_postal_code(self, key, code):
+        assert re.match("^\d{5}(-\d{4})?$", code), "Invalid postal code format"
+        return code
+
+    @validates("phone_number")
+    def validate_phone_number(self, key, number):
+        assert re.match("^\+?1?\d{9,15}$", number), "Invalid phone number format"
+        return number
 
     def __repr__(self):
         return f"<ShippingInfo {self.id} for User {self.user_id}>"
