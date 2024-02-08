@@ -1,7 +1,6 @@
 //authActions.js
 export const authenticateUser =
-    (username, password, setLoginError, setLoginSuccess, history) =>
-    async (dispatch) => {
+    (username, password, setError, setSuccess, history) => async (dispatch) => {
         dispatch({ type: "AUTH_START" });
         try {
             const response = await fetch("/login", {
@@ -12,7 +11,7 @@ export const authenticateUser =
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Authentication failed");
+                throw errorData.message || "Authentication failed";
             }
 
             const data = await response.json();
@@ -22,12 +21,11 @@ export const authenticateUser =
                     user: data,
                 },
             });
-            setLoginSuccess("Login successful");
-            // history.push("/");
+            setSuccess("Login successful");
         } catch (error) {
             console.error("Error during login:", error);
             dispatch({ type: "AUTH_FAIL" });
-            setLoginError(error.toString());
+            setError(error.toString());
         }
     };
 
@@ -49,7 +47,7 @@ export const checkLoginSession = () => async (dispatch) => {
             dispatch({
                 type: "AUTH_SUCCESS",
                 payload: {
-                    user: data.user,
+                    user: data,
                 },
             });
         } else {
@@ -63,8 +61,7 @@ export const checkLoginSession = () => async (dispatch) => {
 };
 
 export const registerUser =
-    (userData, setSignupError, setSignupSuccess, history) =>
-    async (dispatch) => {
+    (userData, setError, setSuccess, history) => async (dispatch) => {
         dispatch({ type: "AUTH_START" });
         try {
             const response = await fetch("/user_auth", {
@@ -73,18 +70,20 @@ export const registerUser =
                 body: JSON.stringify(userData),
             });
             const data = await response.json();
-
+            console.log("Register User Response Data:", data);
             if (!response.ok) {
                 throw new Error(data.error || "Signup failed");
             }
 
-            dispatch({ type: "AUTH_SUCCESS", payload: { user: data.user } });
-            setSignupSuccess("Signup successful!");
+            dispatch({ type: "AUTH_SUCCESS", payload: data });
+            setSuccess("Signup successful!");
+            return { payload: { user: data.user } };
             // setTimeout(() => history.push("/"), 1000);
         } catch (error) {
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });
-            setSignupError(error.message);
+            setError(error.toString());
+            return { error: { message: error.message } };
         }
     };
 

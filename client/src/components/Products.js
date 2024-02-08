@@ -5,7 +5,6 @@ import { fetchProducts } from "../store/actions/productActions";
 
 export default function Products() {
     const dispatch = useDispatch();
-    // Correctly access the state under the 'products' key, and then directly use the productList
     const { productList, isLoading, error } = useSelector(
         (state) => state.products
     );

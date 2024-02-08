@@ -4,8 +4,10 @@ import { useHistory } from "react-router-dom";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useCartContext } from "../components/CartContext";
-import { registerUser } from "../store/actions/authActions";
+import { createShippingInfo } from "../store/actions/shippingActions";
+import { createOrder } from "../store/actions/orderActions";
 import { v4 as uuidv4 } from "uuid";
+import { registerUser } from "../store/actions/authActions";
 
 const Checkout = () => {
     const { cartItems } = useCartContext();
@@ -13,11 +15,10 @@ const Checkout = () => {
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const history = useHistory();
-    const [signupSuccess, setSignupSuccess] = useState("");
-
     const [error, setError] = useState("");
-    const [signupError, setSignupError] = useState("");
+    const [success, setSuccess] = useState("");
 
+    // Validation Schema for checkout form fields
     const CheckoutSchema = Yup.object().shape({
         firstName: Yup.string().required("First name is required"),
         lastName: Yup.string().required("Last name is required"),
@@ -39,45 +40,44 @@ const Checkout = () => {
             : Yup.string(),
     });
 
-    const calculateTotal = () => {
-        return cartItems
-            .reduce((total, item) => total + item.price * item.quantity, 0)
-            .toFixed(2);
-    };
+    const handleFormSubmit = async (values, { setSubmitting }) => {
+        console.log("Starting checkout process...");
 
-    const handleFormSubmit = async (values, actions) => {
-        console.log("Form submission started", values);
-        let currentUser = user;
         setError("");
-        console.log("Authenticating...");
-
-        if (!isAuthenticated) {
-            try {
-                await dispatch(
-                    registerUser({
-                        username: values.username,
-                        password: values.password,
-                        email: values.email,
-                    })
-                );
-                console.log("Registration successful");
-            } catch (registrationError) {
-                console.error("Registration failed:", registrationError);
-                setError(`Registration failed: ${registrationError.message}`);
-                actions.setSubmitting(false);
-                return;
-            }
-        }
-
+        setSuccess("");
         try {
-            console.log("Authenticated, processing checkout...");
+            let userId = user?.id;
 
-            if (!currentUser || !currentUser.id) {
-                throw new Error("Current user is not properly set.");
+            if (!isAuthenticated) {
+                console.log("Registering user...");
+                const registrationResponse = await dispatch(
+                    registerUser(
+                        {
+                            username: values.username,
+                            password: values.password,
+                            email: values.email,
+                        },
+                        setError,
+                        setSuccess,
+                        history
+                    )
+                );
+                console.log("Registration response:", registrationResponse);
+                if (
+                    !registrationResponse.payload ||
+                    registrationResponse.error
+                ) {
+                    throw new Error("Registration process failed.");
+                }
+                setSuccess(
+                    "Registration successful. Proceeding with checkout..."
+                );
+                console.log(
+                    "User registered successfully. Proceeding with checkout..."
+                );
             }
 
             const shippingInfo = {
-                user_id: currentUser.id,
                 address_line1: values.addressLine1,
                 address_line2: values.addressLine2 || "",
                 city: values.city,
@@ -87,61 +87,47 @@ const Checkout = () => {
                 phone_number: values.phoneNumber,
             };
 
-            const shippingResponse = await fetch("/shipping_info", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(shippingInfo),
-            });
-
-            if (!shippingResponse.ok) {
-                const errorResponse = await shippingResponse.json();
-                throw new Error(
-                    errorResponse.error ||
-                        "Failed to create shipping information."
-                );
-            }
-
-            const shippingData = await shippingResponse.json();
-            console.log(
-                "Shipping information created successfully",
-                shippingData
+            console.log("Creating shipping information:", shippingInfo);
+            const shippingResponse = await dispatch(
+                createShippingInfo(shippingInfo)
             );
 
-            const orderDetails = cartItems.map((item) => ({
-                product_id: item.id,
-                quantity: item.quantity,
-                color_id: item.colorId,
-            }));
+            if (shippingResponse.error) {
+                throw new Error("Failed to create shipping information.");
+            }
 
-            const orderResponse = await fetch("/orders", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: currentUser.id,
-                    shipping_info_id: shippingData.id,
-                    confirmation_num: uuidv4(),
-                    order_details: orderDetails,
-                }),
-            });
+            const orderDetails = {
+                shipping_info_id: shippingResponse.payload.shippingInfo.id,
+                confirmation_num: uuidv4(),
+                order_details: cartItems.map((item) => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    color_id: item.colorId,
+                })),
+            };
 
-            if (!orderResponse.ok) {
-                const errorResponse = await orderResponse.json();
+            console.log("Order details:", orderDetails);
+            const orderResponse = await dispatch(createOrder(orderDetails));
+            console.log("Order response:", orderResponse);
+            if (!orderResponse.payload || orderResponse.error) {
                 throw new Error(
-                    errorResponse.error || "Failed to create order."
+                    orderResponse?.error?.message || "Checkout process failed."
                 );
             }
 
-            const orderData = await orderResponse.json();
-            console.log("Order created successfully", orderData);
-            actions.setSubmitting(false);
-            history.push("/confirmation");
-        } catch (error) {
-            console.error("Checkout process error:", error);
-            setError(`Checkout process failed: ${error.message}`);
-            actions.setSubmitting(false);
+            console.log("Order created successfully:", orderResponse.payload);
+            setSuccess("Checkout successful!");
+            const confirmationNumber =
+                orderResponse.payload.order.confirmation_num;
+            history.push("/confirmation", { confirmationNumber });
+        } catch (err) {
+            setError(err.message || "Checkout process failed.");
+            console.error("Checkout error:", err);
+        } finally {
+            setSubmitting(false);
+            console.log("Checkout process completed.");
         }
     };
-
     return (
         <div className="container mx-auto p-4">
             {error && (
@@ -149,19 +135,19 @@ const Checkout = () => {
                     {error}
                 </div>
             )}
-            {signupSuccess && (
+            {success && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    {signupSuccess}
+                    {success}
                 </div>
             )}
 
             <h1 className="text-3xl font-bold mb-4">Checkout</h1>
-            {error && <div className="text-red-500">{error}</div>}
+            {Error && <div className="text-red-500">{Error}</div>}
 
             <div className="mb-6">
-                {cartItems.map((item) => (
+                {cartItems.map((item, index) => (
                     <div
-                        key={item.id}
+                        key={item.id + (item.colorId || `-${index}`)}
                         className="flex justify-between items-center bg-white p-4 rounded-md mb-2 shadow"
                     >
                         <div className="flex items-center">
@@ -176,7 +162,7 @@ const Checkout = () => {
                                     Quantity: {item.quantity}
                                 </p>
                                 <p className="text-sm text-gray-500">
-                                    Color: {item.color}{" "}
+                                    Color: {item.color}
                                 </p>
                             </div>
                         </div>
@@ -185,7 +171,15 @@ const Checkout = () => {
                         </span>
                     </div>
                 ))}
-                <p className="text-xl font-bold">Total: ${calculateTotal()}</p>
+                <p className="text-xl font-bold">
+                    Total: $
+                    {(
+                        cartItems.reduce(
+                            (total, item) => total + item.price * item.quantity,
+                            0
+                        ) / 100
+                    ).toFixed(2)}
+                </p>
             </div>
 
             <Formik
@@ -199,8 +193,8 @@ const Checkout = () => {
                     zip: "",
                     country: "",
                     phoneNumber: "",
-                    email: "",
-                    username: "",
+                    email: user?.email || "",
+                    username: user?.username || "",
                     password: "",
                 }}
                 validationSchema={CheckoutSchema}

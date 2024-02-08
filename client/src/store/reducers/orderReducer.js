@@ -1,4 +1,3 @@
-// src/store/orders/orderReducer.js
 import {
     CREATE_ORDER_START,
     CREATE_ORDER_SUCCESS,
@@ -7,7 +6,7 @@ import {
 
 const initialState = {
     loading: false,
-    orders: [],
+    orderData: {},
     error: null,
 };
 
@@ -19,7 +18,7 @@ const orderReducer = (state = initialState, action) => {
             return {
                 ...state,
                 loading: false,
-                orders: [...state.orders, action.payload],
+                orderData: action.payload,
                 error: null,
             };
         case CREATE_ORDER_FAIL:
