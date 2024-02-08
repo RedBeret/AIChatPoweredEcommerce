@@ -3,11 +3,11 @@
 # Standard library imports
 import logging
 import os
+import traceback
 from calendar import c
 from time import sleep
 
 import bcrypt
-import openai
 
 # from app_utils import create_assistant
 from config import api, app, db, ma
@@ -26,9 +26,10 @@ from models import (
     ShippingInfo,
     UserAuth,
 )
-from openai import OpenAI
-from packaging import version
-from sqlalchemy.exc import IntegrityError
+
+# from openai import OpenAI
+# from packaging import version
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 # Local imports
 
@@ -58,9 +59,7 @@ class UserAuthSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = UserAuth
-        load_instance = (
-            True  # Allows deserialization directly into a UserAuth model instance.
-        )
+        load_instance = True
         exclude = ("password_hash",)  # Excludes sensitive information from the output.
 
     # Ensures passwords are at least 6 characters long, enhancing basic security.
@@ -72,7 +71,6 @@ class UserAuthSchema(ma.SQLAlchemyAutoSchema):
 class UserAuthResource(Resource):
     """
     Resource for managing UserAuth entities including retrieval, creation, deletion,
-    and updating of user information. Incorporates JWT for secure operations requiring authentication.
     """
 
     def get(self):
@@ -84,39 +82,47 @@ class UserAuthResource(Resource):
         return make_response(jsonify(user_schema.dump(users)), 200)
 
     def post(self):
-        """
-        Creates a new user with the provided username, email, and password.
-        Passwords are hashed before storage to ensure security.
-        """
         user_data = request.get_json()
-        user = UserAuth.query.filter_by(username=user_data["username"]).first()
-        if user:
-            return make_response(jsonify({"error": "Username already exists."}), 400)
 
-        hashed_password = bcrypt.generate_password_hash(user_data["password"]).decode(
-            "utf-8"
-        )
+        if not user_data:
+            return make_response(jsonify({"error": "No input data provided"}), 400)
+
+        username = user_data.get("username")
+        email = user_data.get("email")
+        password = user_data.get("password")
+
+        if not all([username, email, password]):
+            return make_response(
+                jsonify({"error": "Missing username, email, or password"}), 400
+            )
+
+        if len(password) < 6:
+            return make_response(
+                jsonify({"error": "Password must be at least 6 characters long"}), 400
+            )
+
+        if UserAuth.query.filter_by(username=username).first():
+            return make_response(jsonify({"error": "Username already exists"}), 409)
+
+        if UserAuth.query.filter_by(email=email).first():
+            return make_response(jsonify({"error": "Email already exists"}), 409)
+
+        # Hashing password with bcrypt
+        hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+
         new_user = UserAuth(
-            username=user_data["username"],
-            email=user_data["email"],
-            password_hash=hashed_password,
+            username=username, email=email, password_hash=hashed_password
         )
         db.session.add(new_user)
         db.session.commit()
 
-        # Automatically log the user in after registration
-        session["user_id"] = new_user.id
-        session["username"] = new_user.username
-        session["logged_in"] = True
-
         return make_response(
-            jsonify({"message": "User created and logged in successfully"}), 201
+            jsonify({"message": "User created successfully", "id": new_user.id}), 201
         )
 
     def delete(self):
         """
         Deletes a user after validating their credentials.
-        Requires JWT authentication to ensure that the operation is authorized.
         """
         try:
             data = request.get_json()
@@ -145,7 +151,6 @@ class UserAuthResource(Resource):
     def patch(self):
         """
         Updates a user's password after validating the current password.
-        Requires JWT authentication to ensure the user is authorized to make the change.
         """
         data = request.get_json()
         user = UserAuth.query.filter_by(username=data["username"]).first()
@@ -161,7 +166,7 @@ class UserAuthResource(Resource):
 
 class UserLoginResource(Resource):
     """
-    Handles user login requests. Validates provided credentials and issues a JWT token upon success.
+    Handles user login requests. Validates provided credentials
     """
 
     def post(self):
@@ -178,17 +183,15 @@ class UserLoginResource(Resource):
         bcrypt = Bcrypt()
 
         if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
-            # Set user info in session
             session["user_id"] = user.id
             session["username"] = user.username
             session["logged_in"] = True
 
-            # Include additional user data in the response
             response_data = {
                 "message": "Login successful",
                 "user_id": user.id,
                 "username": user.username,
-                "email": user.email,  # Include any other relevant user data here
+                "email": user.email,
             }
 
             return make_response(jsonify(response_data), 200)
@@ -272,30 +275,72 @@ class ShippingInfoResource(Resource):
 
     def post(self):
         shipping_data = request.get_json()
-        user_id = shipping_data.get("user_id")
+        if not shipping_data:
+            return make_response(jsonify({"error": "No data provided"}), 400)
 
-        if not user_id:
-            return {"error": "User ID is required"}, 400
+        # Validate required fields
+        required_fields = [
+            "address_line1",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "phone_number",
+        ]
+        missing_fields = [
+            field for field in required_fields if field not in shipping_data
+        ]
+        if missing_fields:
+            return make_response(
+                jsonify(
+                    {"error": "Missing data for fields: " + ", ".join(missing_fields)}
+                ),
+                400,
+            )
 
-        shipping_info = ShippingInfo(
-            user_id=user_id,
-            address_line1=shipping_data["address_line1"],
-            address_line2=shipping_data.get("address_line2", ""),
-            city=shipping_data["city"],
-            state=shipping_data["state"],
-            postal_code=shipping_data["postal_code"],
-            country=shipping_data["country"],
-            phone_number=shipping_data["phone_number"],
-        )
+        try:
+            shipping_info = ShippingInfo(
+                address_line1=shipping_data["address_line1"],
+                address_line2=shipping_data.get("address_line2", ""),
+                city=shipping_data["city"],
+                state=shipping_data["state"],
+                postal_code=shipping_data["postal_code"],
+                country=shipping_data["country"],
+                phone_number=shipping_data["phone_number"],
+            )
+            db.session.add(shipping_info)
+            db.session.commit()
 
-        db.session.add(shipping_info)
-        db.session.commit()
-        return (
-            jsonify(
-                {"message": "Shipping info added successfully", "id": shipping_info.id}
-            ),
-            201,
-        )
+            # Manually constructing the response
+            response_data = {
+                "id": shipping_info.id,
+                "address_line1": shipping_info.address_line1,
+                "address_line2": shipping_info.address_line2,
+                "city": shipping_info.city,
+                "state": shipping_info.state,
+                "postal_code": shipping_info.postal_code,
+                "country": shipping_info.country,
+                "phone_number": shipping_info.phone_number,
+            }
+
+            return make_response(
+                jsonify(
+                    {
+                        "message": "Shipping info added successfully",
+                        "shippingInfo": response_data,
+                    }
+                ),
+                201,
+            )
+
+        except KeyError as e:
+            return make_response(jsonify({"error": f"Missing field in data: {e}"}), 400)
+        except Exception as e:  # Consider narrowing down the exceptions
+            db.session.rollback()
+            return make_response(
+                jsonify({"error": "Failed to add shipping info", "details": str(e)}),
+                500,
+            )
 
     def patch(self):
         user_id = session.get("user_id")
@@ -427,28 +472,43 @@ class ColorResource(Resource):
 
 # Order Resource
 class OrderResource(Resource):
+
     def get(self, order_id):
         order = Order.query.get_or_404(order_id)
-        return make_response(order.to_dict(), 200)
+        return jsonify(order.serialize())
 
     def post(self):
-        data = request.get_json()
-        new_order = Order(
-            user_id=data["user_id"], shipping_info_id=data.get("shipping_info_id")
-        )
-        db.session.add(new_order)
-        db.session.flush()
+        try:
+            data = request.get_json()
 
-        for detail in data["order_details"]:
-            order_detail = OrderDetail(
-                order_id=new_order.id,
-                product_id=detail["product_id"],
-                quantity=detail["quantity"],
+            new_order = Order(
+                user_id=data["user_id"], shipping_info_id=data.get("shipping_info_id")
             )
-            db.session.add(order_detail)
+            db.session.add(new_order)
+            db.session.flush()
 
-        db.session.commit()
-        return make_response(new_order.to_dict(), 201)
+            for detail in data["order_details"]:
+                order_detail = OrderDetail(
+                    order_id=new_order.id,
+                    product_id=detail["product_id"],
+                    quantity=detail["quantity"],
+                    color_id=detail.get("color_id"),
+                )
+                db.session.add(order_detail)
+
+            db.session.commit()
+            return make_response(
+                {
+                    "message": "Order created successfully",
+                    "order": new_order.serialize(),
+                },
+                201,
+            )
+
+        except Exception as e:
+            db.session.rollback()
+            print("Error:", str(e))
+            return make_response({"error": "An unexpected error occurred"}, 500)
 
     def delete(self, order_id):
         order = Order.query.get_or_404(order_id)

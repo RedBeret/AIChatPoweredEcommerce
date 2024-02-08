@@ -93,19 +93,17 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for ShippingInfo
-        for user_id in user_ids:
+        for _ in range(50):
             shipping_info = ShippingInfo(
-                user_id=user_id,
                 address_line1=fake.street_address(),
                 address_line2=fake.secondary_address(),
                 city=fake.city(),
                 state=fake.state(),
-                postal_code=fake.postcode(),
+                postal_code=fake.zipcode(),
                 country=fake.country(),
                 phone_number=fake.phone_number(),
             )
             db.session.add(shipping_info)
-
         db.session.commit()
 
         # Create fake data for Orders and OrderDetails

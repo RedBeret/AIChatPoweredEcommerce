@@ -8,8 +8,8 @@ import { registerUser } from "../store/actions/authActions";
 export default function Register() {
     const dispatch = useDispatch();
     const history = useHistory();
-    const [signupSuccess, setSignupSuccess] = useState("");
-    const [signupError, setSignupError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [error, setError] = useState("");
     const initialValues = {
         email: "",
         username: "",
@@ -29,22 +29,20 @@ export default function Register() {
     });
 
     const onSubmit = (values, { setSubmitting }) => {
-        dispatch(
-            registerUser(values, setSignupError, setSignupSuccess, history)
-        );
+        dispatch(registerUser(values, setError, setSuccess, history));
         setSubmitting(false);
     };
 
     return (
         <main className="w-full max-w-md mx-auto p-6">
-            {signupSuccess && (
+            {success && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    {signupSuccess}
+                    {success}
                 </div>
             )}
-            {signupError && (
+            {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    {signupError}
+                    {error}
                 </div>
             )}
             <div className="mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">

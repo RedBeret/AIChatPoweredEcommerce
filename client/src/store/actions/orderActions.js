@@ -1,48 +1,41 @@
-// src/store/orders/orderActions.js
-
-// Action Types
+// Order Action Types
 export const CREATE_ORDER_START = "CREATE_ORDER_START";
 export const CREATE_ORDER_SUCCESS = "CREATE_ORDER_SUCCESS";
 export const CREATE_ORDER_FAIL = "CREATE_ORDER_FAIL";
 
-// Action Creators
-
-// Signals the start of creating an order
+// Action Creators for creating an order
 export const createOrderStart = () => ({
     type: CREATE_ORDER_START,
 });
 
-// Handles the success of order creation
 export const createOrderSuccess = (orderData) => ({
     type: CREATE_ORDER_SUCCESS,
     payload: orderData,
 });
 
-// Handles the failure of order creation
 export const createOrderFail = (error) => ({
     type: CREATE_ORDER_FAIL,
     payload: error,
 });
 
-// Performs the order creation operation
+// Async Action Creator for creating an order
 export const createOrder = (orderDetails) => async (dispatch) => {
     dispatch(createOrderStart());
     try {
-        // Attempt to create an order through your API
         const response = await fetch("/orders", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(orderDetails),
         });
 
-        // Handle non-OK responses
-        if (!response.ok) throw new Error("Order creation failed");
+        if (!response.ok) {
+            const errorResponse = await response.json();
+            throw new Error(errorResponse.error || "Failed to create order.");
+        }
 
-        // Dispatch success action with order data
         const data = await response.json();
         dispatch(createOrderSuccess(data));
     } catch (error) {
-        // Dispatch failure action with error message
         dispatch(createOrderFail(error.message));
     }
 };

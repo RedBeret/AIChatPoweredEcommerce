@@ -8,8 +8,8 @@ import { authenticateUser } from "../store/actions/authActions";
 export default function Login() {
     const dispatch = useDispatch();
     const history = useHistory();
-    const [loginError, setLoginError] = useState("");
-    const [loginSuccess, setLoginSuccess] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const initialValues = {
         username: "",
@@ -24,27 +24,21 @@ export default function Login() {
     const onSubmit = async (values, { setSubmitting }) => {
         const { username, password } = values;
         dispatch(
-            authenticateUser(
-                username,
-                password,
-                setLoginError,
-                setLoginSuccess,
-                history
-            )
+            authenticateUser(username, password, setError, setSuccess, history)
         );
         setSubmitting(false);
     };
 
     return (
         <main className="w-full max-w-md mx-auto p-6">
-            {loginError && (
+            {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{loginError}</span>
+                    <span className="block sm:inline">{error}</span>
                 </div>
             )}{" "}
-            {loginSuccess && (
+            {success && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{loginSuccess}</span>
+                    <span className="block sm:inline">{success}</span>
                 </div>
             )}{" "}
             <div className="mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">

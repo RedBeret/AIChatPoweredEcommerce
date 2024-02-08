@@ -9,6 +9,8 @@ from app_utils import (
     validate_positive_number,
 )
 from config import bcrypt, db  # Configuration for database and bcrypt for hashing
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin  # For serializing models
 
@@ -21,21 +23,19 @@ class UserAuth(db.Model, SerializerMixin):
     # Primary Key and fields with uniqueness constraints to avoid duplicate entries
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
     # Defining relationships with other models to enable easy data retrieval
     chat_messages = db.relationship(
         "ChatMessage", back_populates="user", cascade="all, delete-orphan"
     )
-    shipping_info = db.relationship(
-        "ShippingInfo", back_populates="user", uselist=False
-    )
+
     openai_interactions = db.relationship("OpenAIInteraction", back_populates="user")
     orders = db.relationship("Order", back_populates="user")
 
     # Ensures password field is write-only for security reasons
-    @property
+    @hybrid_property
     def password(self):
         raise AttributeError("password is not a readable attribute")
 
@@ -50,6 +50,7 @@ class UserAuth(db.Model, SerializerMixin):
 
     serialize_rules = (
         "-password_hash",
+        "-chat_messages.user",
     )  # Excludes password_hash from serialization to enhance security
 
 
@@ -60,7 +61,6 @@ class ShippingInfo(db.Model, SerializerMixin):
 
     # Standard fields for storing address information
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
     address_line1 = db.Column(db.String(255), nullable=False)
     address_line2 = db.Column(db.String(255))
     city = db.Column(db.String(255), nullable=False)
@@ -68,10 +68,6 @@ class ShippingInfo(db.Model, SerializerMixin):
     postal_code = db.Column(db.String(20), nullable=False)
     country = db.Column(db.String(255), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
-
-    user = db.relationship(
-        "UserAuth", back_populates="shipping_info"
-    )  # Establishes relationship with UserAuth model
 
     def __repr__(self):
         return f"<ShippingInfo {self.id} for User {self.user_id}>"
@@ -92,6 +88,10 @@ class Product(db.Model, SerializerMixin):
     colors = db.relationship(
         "Color", secondary="product_colors", back_populates="products"
     )
+
+    @hybrid_property
+    def price_in_dollars(self):
+        return self.price / 100
 
     # Validation methods ensure data integrity before saving to database
     @validates("name", "description", "image_path", "imageAlt", "item_quantity")
@@ -126,6 +126,11 @@ class Product(db.Model, SerializerMixin):
             ]
 
         return data
+
+    serialize_rules = (
+        "-price",
+        "price_in_dollars",
+    )
 
     def __repr__(self):
         return f"<Product {self.name}>"
@@ -179,9 +184,8 @@ class Order(db.Model, SerializerMixin):
     created_at = db.Column(
         db.DateTime, default=db.func.current_timestamp()
     )  # Timestamp of order creation
-    confirmation_num = db.Column(
-        db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
-    )  # Unique confirmation number
+    confirmation_num = db.Column(db.String(36), unique=True, nullable=False)
+    # Unique confirmation number
 
     # ForeignKey relationship to ShippingInfo for delivery details
     shipping_info_id = db.Column(
@@ -195,6 +199,27 @@ class Order(db.Model, SerializerMixin):
     user = db.relationship(
         "UserAuth", back_populates="orders"
     )  # Links back to the user for easy access to their orders
+
+    products = association_proxy("order_details", "product")
+
+    serialize_rules = (
+        "-user",
+        "-order_details.product.order_details",
+        "-order_details.order",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.confirmation_num = str(uuid.uuid4())
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "shipping_info_id": self.shipping_info_id,
+            "confirmation_num": self.confirmation_num,
+            "order_details": [detail.serialize() for detail in self.order_details],
+        }
 
     def __repr__(self):
         # Representation includes the order ID and the user ID for clarity.
@@ -223,6 +248,33 @@ class OrderDetail(db.Model, SerializerMixin):
     product = db.relationship(
         "Product"
     )  # Links to the product for easy access to product details
+    serialize_rules = ("-order", "-product.order_details")
+
+    def serialize(self):
+        serialized_data = {
+            "id": self.id,
+            "order_id": self.order_id,
+            "product_id": self.product_id,
+            "quantity": self.quantity,
+            "color_id": self.color_id,
+        }
+
+        # Check if product is not None before accessing its attributes
+        if self.product is not None:
+            serialized_data["product"] = {
+                "id": self.product.id,
+                "name": self.product.name,
+            }
+        else:
+            serialized_data["product"] = {"id": None, "name": "Unknown"}
+
+        # Check if color is not None before accessing its attributes
+        if self.color is not None:
+            serialized_data["color"] = {"id": self.color.id, "name": self.color.name}
+        else:
+            serialized_data["color"] = {"id": None, "name": "Unknown"}
+
+        return serialized_data
 
     def __repr__(self):
         # Provides clarity on the order detail's composition for debugging and logging.
