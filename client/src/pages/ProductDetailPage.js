@@ -41,7 +41,7 @@ export default function ProductDetail() {
     const formattedPrice = `$${(product.price / 100).toFixed(2)}`;
 
     return (
-        <div className="bg-white py-8">
+        <div className="bg-white py-8 lg:py-32">
             {/* Check if loading */}
             {isLoading && <p className="text-center">Loading...</p>}
 
