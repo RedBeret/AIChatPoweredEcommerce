@@ -18,6 +18,7 @@ import Confirmation from "./pages/ConfirmationPage";
 import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
+import TechSupport from "./pages/TechSupport";
 
 // const ProtectedRoute = ({ component: Component, ...rest }) => {
 //     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -49,6 +50,7 @@ export default function App() {
                     <Route path="/about" component={About} />
                     <Route path="/checkout" component={Checkout} />
                     <Route path="/confirmation" component={Confirmation} />
+                    <Route path="/techsupport" component={TechSupport} />
                     <Route path="/auth" component={AuthPages} />
                     <Route path="/contact" component={Contact} />
                 </Switch>
