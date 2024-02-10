@@ -686,5 +686,5 @@ def simulate_chat():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
     app.run(port=5555, debug=True)
