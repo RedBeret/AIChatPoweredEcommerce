@@ -33,6 +33,8 @@
             "index": "pypi",
             "version": "==9.0.1"
         },
+
+        "asttokens": {
         "annotated-types": {
             "hashes": [
                 "sha256:0641064de18ba7a25dee8f96403ebc39113d0cb953a01429249d5c7564666a43",
@@ -97,6 +99,7 @@
                 "sha256:42d49f2fad9310dd946d7be73d46776bcd4d5fde4f49ad210cfdd447fbdfc346",
                 "sha256:593faeee62a7c037d50fc835617a01b887503f972fb52b188ae7e50e9cb69740"
             ],
+
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==0.10.2"
@@ -110,7 +113,7 @@
             "markers": "python_version >= '3.6'",
             "version": "==2024.2.2"
         },
-        "click": {
+      "click": {
             "hashes": [
                 "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28",
                 "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de"
@@ -232,6 +235,7 @@
             "markers": "python_version >= '3.7'",
             "version": "==3.0.3"
         },
+
         "greenlet": {
             "hashes": [
                 "sha256:01bc7ea167cf943b4c802068e178bbf70ae2e8c080467070d01bfa02f337ee67",
@@ -344,6 +348,7 @@
             "markers": "python_version < '3.9'",
             "version": "==6.1.1"
         },
+
         "itsdangerous": {
             "hashes": [
                 "sha256:2c2349112351b88699d8d4b6b075022c0808887cb7ad10069318a8b0bc88db44",
