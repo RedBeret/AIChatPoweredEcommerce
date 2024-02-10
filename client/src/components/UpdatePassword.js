@@ -30,6 +30,8 @@ export default function UpdatePassword() {
     });
 
     const onSubmit = (values, { setSubmitting }) => {
+        setError("");
+
         const { username, currentPassword, newPassword } = values;
         dispatch(
             updatePassword(

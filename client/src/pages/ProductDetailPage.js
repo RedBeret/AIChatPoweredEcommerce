@@ -22,7 +22,14 @@ export default function ProductDetail() {
     useEffect(() => {
         dispatch(fetchProduct(id));
     }, [dispatch, id]);
-
+    useEffect(() => {
+        if (product && product.colors.length > 0) {
+            const blackColorOption = product.colors.find(
+                (color) => color.name.toLowerCase() === "black"
+            );
+            setSelectedColor(blackColorOption || product.colors[0]);
+        }
+    }, [product]);
     if (error) {
         return <p className="text-center text-red-600">{error}</p>;
     }
@@ -34,7 +41,7 @@ export default function ProductDetail() {
     const formattedPrice = `$${(product.price / 100).toFixed(2)}`;
 
     return (
-        <div className="bg-white py-8">
+        <div className="bg-white py-8 lg:py-32">
             {/* Check if loading */}
             {isLoading && <p className="text-center">Loading...</p>}
 

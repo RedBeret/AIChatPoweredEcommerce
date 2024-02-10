@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
+from dotenv import load_dotenv
 
+load_dotenv()
 # Standard library imports
 import logging
 import os
-import traceback
-from calendar import c
-from time import sleep
 
 import bcrypt
+from openai import OpenAI
 
-# from app_utils import create_assistant
-from config import api, app, db, ma
-from dotenv import load_dotenv
-from flask import Flask, jsonify, make_response, request, session
+client = OpenAI()
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import traceback
+
+from config import api, app, db, ma, openai_client
+from flask import Flask, current_app, jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
 from flask_marshmallow import fields
 from flask_restful import Resource, reqparse
+from flask_sqlalchemy import SQLAlchemy
 from marshmallow import Schema, ValidationError, fields, post_dump, validate
 from models import (
     ChatMessage,
@@ -25,10 +30,9 @@ from models import (
     Product,
     ShippingInfo,
     UserAuth,
+    db,
 )
-
-# from openai import OpenAI
-# from packaging import version
+from openai import OpenAI
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 # Local imports
@@ -39,10 +43,14 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
 )
-load_dotenv()
+
+
 app.secret_key = os.environ.get("SECRET_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 
 bcrypt = Bcrypt(app)
+# db = SQLAlchemy(app)
 
 
 @app.route("/")
@@ -528,98 +536,87 @@ class OrderResource(Resource):
 
 
 # --------------------------------- Chatbot Resource ---------------------------------#
-# Check OpenAI version is correct
-# required_version = version.parse("1.1.1")
-# current_version = version.parse(openai.__version__)
-# OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-# if current_version < required_version:
-#     raise ValueError(
-#         f"Error: OpenAI version {openai.__version__}"
-#         " is less than the required version 1.1.1"
-#     )
-# else:
-#     print("OpenAI version is compatible.")
-
-# # Init client
-# client = OpenAI(api_key=OPENAI_API_KEY)
-
-# # Create new assistant or load existing
-# assistant_id = create_assistant(client)
-
-
-# # Start conversation thread
-# class OpenAIStartConversation(Resource):
-#     def start_conversation():
-#         print("Starting a new conversation...")  # Debugging line
-#         thread = client.beta.threads.create()
-#         print(f"New thread created with ID: {thread.id}")  # Debugging line
-#         return jsonify({"thread_id": thread.id})
-
-
-# # Generate response
-# class OpenAIChat(Resource):
-#     def chat():
-#         data = request.json
-#         thread_id = data.get("thread_id")
-#         user_input = data.get("message", "")
-
-#         if not thread_id:
-#             print("Error: Missing thread_id")  # Debugging line
-#             return jsonify({"error": "Missing thread_id"}), 400
-
-#         print(
-#             f"Received message: {user_input} for thread ID: {thread_id}"
-#         )  # Debugging line
-
-#         # Add the user's message to the thread
-#         client.beta.threads.messages.create(
-#             thread_id=thread_id, role="user", content=user_input
-#         )
-
-#         # Run the Assistant
-#         run = client.beta.threads.runs.create(
-#             thread_id=thread_id, assistant_id=assistant_id
-#         )
-
-#         # Check if the Run requires action (function call)
-#         while True:
-#             run_status = client.beta.threads.runs.retrieve(
-#                 thread_id=thread_id, run_id=run.id
-#             )
-#             print(f"Run status: {run_status.status}")
-#             if run_status.status == "completed":
-#                 break
-#             sleep(1)  # Wait for a second before checking again
-
-#         # Retrieve and return the latest message from the assistant
-#         messages = client.beta.threads.messages.list(thread_id=thread_id)
-#         response = messages.data[0].content[0].text.value
-
-#         print(f"Assistant response: {response}")  # Debugging line
-#         return jsonify({"response": response})
 
 
 # ChatMessage Resource
 class ChatMessageResource(Resource):
-    def get(self, message_id):
-        message = ChatMessage.query.get_or_404(message_id)
-        return make_response(message.to_dict(), 200)
+    def get(self):
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Authentication required"}), 401
+
+        messages = ChatMessage.query.filter_by(user_id=user_id).all()
+        serialized_messages = [
+            {
+                "message": msg.message,
+                "response": msg.response,
+                "timestamp": msg.timestamp.isoformat(),
+            }
+            for msg in messages
+        ]
+        return jsonify(serialized_messages), 200
 
     def post(self):
-        data = request.get_json()
-        new_message = ChatMessage(
-            user_id=data["user_id"],
-            message=data["message"],
-            response=data.get("response", ""),
-        )
-        db.session.add(new_message)
-        db.session.commit()
-        return make_response(new_message.to_dict(), 201)
+        user_id = session.get("user_id")
+        if not user_id:
+            return make_response(jsonify({"error": "User not authenticated."}), 401)
+
+        data = request.json
+        user_message = data.get("message")
+        thread_id = data.get("thread_id", None)
+
+        if not user_message:
+            return make_response(jsonify({"error": "Message is required."}), 400)
+
+        try:
+            messages_payload = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message},
+            ]
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages_payload,
+                temperature=0.5,
+                max_tokens=150,
+                thread_id=thread_id,
+            )
+
+            ai_response = response.choices[0].message.content
+            thread_id = response.get("thread_id", thread_id)
+
+            chat_message = ChatMessage(
+                user_id=user_id,
+                message=user_message,
+                response=ai_response,
+            )
+            db.session.add(chat_message)
+            db.session.commit()
+
+            return (
+                jsonify(
+                    {
+                        "user_message": user_message,
+                        "ai_response": ai_response,
+                        "thread_id": thread_id,
+                    }
+                ),
+                200,
+            )
+
+        except Exception as e:
+            current_app.logger.error(f"An error occurred: {e}")
+            traceback.print_exc()
+            return make_response(jsonify({"error": str(e)}), 500)
 
 
 # Routing
-# api.add_resource(OpenAIStartConversation, "/start")
-# api.add_resource(OpenAIChat, "/chat")
+api.add_resource(ChatMessageResource, "/chat_messages", endpoint="chat_messages")
+api.add_resource(
+    ChatMessageResource,
+    "/chat_messages/<int:message_id>",
+    endpoint="chat_message_by_id",
+)
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
@@ -633,5 +630,61 @@ api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
 api.add_resource(SessionCheckResource, "/check_session")
 
 
+def main():
+    """CLI interface for interacting with the chatbot."""
+    print("Welcome to the ChatPoweredEcommerce CLI chat interface.")
+    client = app.test_client()
+    thread_id = None
+
+    with client:
+        with client.session_transaction() as sess:
+            sess["user_id"] = 1
+
+        while True:
+            user_input = input("You: ")
+            if user_input.lower() == "exit":
+                print("Exiting the chat interface...")
+                break
+
+            data = {"message": user_input}
+            if thread_id:
+                data["thread_id"] = thread_id
+
+            response = client.post("/chat_messages", json=data)
+            if response.status_code == 200:
+                response_data = response.get_json()
+                print("Bot:", response_data["ai_response"])
+                thread_id = response_data.get("thread_id", thread_id)
+            else:
+                print(f"An error occurred: {response.status_code}")
+
+
+def simulate_chat():
+    """Simulates chat interaction with the chat endpoint."""
+    client = app.test_client()
+    thread_id = None
+
+    print("Welcome to the ChatPoweredEcommerce CLI chat interface.")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "exit":
+            print("Exiting chat interface.")
+            break
+
+        data = {"message": user_input}
+        if thread_id:
+            data["thread_id"] = thread_id
+
+        response = client.post("/chat_messages", json=data)
+        if response.status_code == 200:
+            response_data = response.get_json()
+            ai_response = response_data.response
+            thread_id = response_data.get("thread_id", thread_id)
+            print("Bot:", ai_response)
+        else:
+            print("An error occurred. Please try again.")
+
+
 if __name__ == "__main__":
+    main()
     app.run(port=5555, debug=True)

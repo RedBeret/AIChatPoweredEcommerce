@@ -22,6 +22,8 @@ export default function Login() {
     });
 
     const onSubmit = async (values, { setSubmitting }) => {
+        setError("");
+
         const { username, password } = values;
         dispatch(
             authenticateUser(username, password, setError, setSuccess, history)
