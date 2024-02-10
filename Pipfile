@@ -12,12 +12,16 @@ flask-sqlalchemy = "3.0.3"
 flask-migrate = "*"
 sqlalchemy-serializer = "*"
 flask-restful = "*"
+flask-session = "*"
 flask-cors = "*"
 faker = "*"
 flask-marshmallow = "*"
 python-dotenv = "*" 
 marshmallow-sqlalchemy = "*"
 flask-jwt-extended = "*"
+openai = "*" 
+marshmallow = "*"
+
 
 [dev-packages]
 
