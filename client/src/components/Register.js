@@ -29,7 +29,21 @@ export default function Register() {
     });
 
     const onSubmit = (values, { setSubmitting }) => {
-        dispatch(registerUser(values, setError, setSuccess, history));
+        setError("");
+
+        dispatch(
+            registerUser(
+                values,
+                setError,
+                (message) => {
+                    setSuccess(message);
+                    setTimeout(() => {
+                        history.push("/");
+                    }, 2000);
+                },
+                history
+            )
+        );
         setSubmitting(false);
     };
 

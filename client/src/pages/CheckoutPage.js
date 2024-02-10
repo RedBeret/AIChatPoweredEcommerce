@@ -20,23 +20,51 @@ const Checkout = () => {
 
     // Validation Schema for checkout form fields
     const CheckoutSchema = Yup.object().shape({
-        firstName: Yup.string().required("First name is required"),
-        lastName: Yup.string().required("Last name is required"),
-        addressLine1: Yup.string().required("Address Line 1 is required"),
-        addressLine2: Yup.string(),
-        city: Yup.string().required("City is required"),
-        state: Yup.string().required("State is required"),
-        zip: Yup.string().required("ZIP code is required"),
+        firstName: Yup.string()
+            .min(2, "First name must be at least 2 characters")
+            .max(50, "First name must be less than 50 characters")
+            .required("First name is required"),
+        lastName: Yup.string()
+            .min(2, "Last name must be at least 2 characters")
+            .max(50, "Last name must be less than 50 characters")
+            .required("Last name is required"),
+        addressLine1: Yup.string()
+            .min(5, "Address Line 1 must be at least 5 characters")
+            .max(100, "Address Line 1 must be less than 100 characters")
+            .required("Address Line 1 is required"),
+        addressLine2: Yup.string().max(
+            100,
+            "Address Line 2 must be less than 100 characters"
+        ),
+        city: Yup.string()
+            .max(50, "City must be less than 50 characters")
+            .required("City is required"),
+        state: Yup.string()
+            .max(50, "State must be less than 50 characters")
+            .required("State is required"),
+        zip: Yup.string()
+            .matches(/^[0-9]+$/, "Must be only digits")
+            .min(5, "ZIP code must be at least 5 digits")
+            .max(10, "ZIP code must be less than 10 digits")
+            .required("ZIP code is required"),
         country: Yup.string().required("Country is required"),
-        phoneNumber: Yup.string().required("Phone number is required"),
+        phoneNumber: Yup.string()
+            .matches(/^[0-9]+$/, "Phone number must be only digits")
+            .min(10, "Phone number must be at least 10 digits")
+            .required("Phone number is required"),
         email: !isAuthenticated
-            ? Yup.string().required("Email is required")
+            ? Yup.string()
+                  .email("Invalid email address")
+                  .required("Email is required")
             : Yup.string(),
         username: !isAuthenticated
             ? Yup.string().required("Username is required")
             : Yup.string(),
         password: !isAuthenticated
-            ? Yup.string().required("Password is required")
+            ? Yup.string()
+                  .min(8, "Password must be at least 8 characters long")
+                  .matches(/(?=.*[0-9])/, "Password must contain a number")
+                  .required("Password is required")
             : Yup.string(),
     });
 
@@ -46,7 +74,7 @@ const Checkout = () => {
         setError("");
         setSuccess("");
         try {
-            let userId = user?.id;
+            // let userId = user?.id;
 
             if (!isAuthenticated) {
                 console.log("Registering user...");

@@ -201,6 +201,12 @@ export default function NavbarMenu() {
                             >
                                 Contact
                             </Link>
+                            <Link
+                                to="/techsupport"
+                                className="flex items-center text-sm font-medium text-black hover:text-gray-300"
+                            >
+                                Tech Support
+                            </Link>
                         </div>
 
                         <div className="ml-auto flex items-center">
