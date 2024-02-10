@@ -19,6 +19,7 @@ import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
 import TechSupport from "./pages/TechSupport";
+import TechSupport2 from "./pages/TechSupport2";
 
 // const ProtectedRoute = ({ component: Component, ...rest }) => {
 //     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -53,6 +54,7 @@ export default function App() {
                     <Route path="/techsupport" component={TechSupport} />
                     <Route path="/auth" component={AuthPages} />
                     <Route path="/contact" component={Contact} />
+                    <Route path="/techsupport2" component={TechSupport2} />
                 </Switch>
                 <Footer />
             </Router>

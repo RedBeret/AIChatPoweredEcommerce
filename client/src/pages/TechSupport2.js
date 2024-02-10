@@ -1,54 +1,51 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { sendMessage } from "../store/actions/chatActions";
 
 export default function TechSupport() {
     const [message, setMessage] = useState("");
-    const dispatch = useDispatch();
-    const { messages, error, success } = useSelector((state) => state.chat);
+    const [messages, setMessages] = useState([]);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (!message.trim()) return;
-
-        dispatch(sendMessage(message));
+        setMessages([
+            ...messages,
+            { id: messages.length + 1, text: message, sender: "user" },
+            {
+                id: messages.length + 2,
+                text: "Your message has been received.",
+                sender: "support",
+            },
+        ]);
         setMessage("");
     };
 
-    const renderMessage = (msg, index) => {
-        const key = msg.id || index;
-        return (
-            <div
-                key={key}
-                className={`flex items-center my-2 ${
-                    msg.sender === "user" ? "" : "justify-end"
-                }`}
-            >
-                <div
-                    className={`p-2 rounded-lg ${
-                        msg.sender === "user" ? "bg-blue-200" : "bg-green-200"
-                    }`}
-                >
-                    {msg.text}
+    const renderMessage = (msg) => {
+        if (msg.sender === "user") {
+            return (
+                <div key={msg.id} className="flex items-center my-2">
+                    <span className="text-lg">🙋‍♂️</span>
+                    <div className="ml-2 p-2 bg-blue-200 rounded-lg">
+                        {msg.text}
+                    </div>
                 </div>
-                <span className="text-lg">
-                    {msg.sender === "user" ? "🙋‍♂️" : "🤖"}
-                </span>
-            </div>
-        );
+            );
+        } else {
+            return (
+                <div
+                    key={msg.id}
+                    className="flex items-center justify-end my-2"
+                >
+                    <div className="mr-2 p-2 bg-green-200 rounded-lg">
+                        {msg.text}
+                    </div>
+                    <span className="text-lg">🤖</span>
+                </div>
+            );
+        }
     };
+
     return (
         <div className="flex flex-col h-screen justify-between bg-gray-100">
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{error}</span>
-                </div>
-            )}{" "}
-            {success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    <span className="block sm:inline">{success}</span>
-                </div>
-            )}{" "}
             {/* Content Area */}
             <div className="m-4 md:mx-20 md:my-8 p-4 bg-white shadow rounded-lg flex-grow">
                 {/* ... other content ... */}
@@ -57,9 +54,7 @@ export default function TechSupport() {
                         Chat with VisionX AI
                     </h2>
                     <div className="mt-4 p-4 bg-gray-100 rounded-lg max-h-[calc(100vh-16rem)] overflow-y-auto">
-                        {messages.map((msg, index) =>
-                            renderMessage(msg, index)
-                        )}
+                        {messages.map(renderMessage)}
                     </div>
                 </div>
             </div>
