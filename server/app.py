@@ -215,15 +215,17 @@ class UserLoginResource(Resource):
 
 
 class UserLogoutResource(Resource):
+
     def post(self):
         """
         Handles the logout process for users.
-
-        Upon logout:
-        - Clears the Flask session to remove any stored user information.
+        Clears the Flask session to remove any stored user information and
+        instructs the browser to clear the session cookie.
         """
         session.clear()
-        return jsonify(message="Logout successful"), 200
+        response = make_response(jsonify({"message": "Logout successful"}), 200)
+        response.set_cookie("session", "", expires=0)  # Correct way to clear the cookie
+        return response
 
 
 # @app.errorhandler(Exception)
@@ -531,14 +533,22 @@ class OrderResource(Resource):
 # --------------------------------- Chatbot Resource ---------------------------------#
 
 
-class ChatMessageSchema(ma.SQLAlchemySchema):
+class ChatMessageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = ChatMessage
-        fields = ("id", "user_id", "message", "response", "timestamp")
+        load_instance = True
+        fields = (
+            "id",
+            "user_id",
+            "message",
+            "response",
+            "request_data",
+            "response_data",
+            "timestamp",
+        )
 
 
 chat_message_schema = ChatMessageSchema()
-chat_messages_schema = ChatMessageSchema(many=True)
 
 
 def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150):
@@ -562,14 +572,26 @@ def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=15
 
 @app.route("/chat_messages", methods=["POST"])
 def chat():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "You must be signed in to send messages."}), 403
     data = request.json
-    print(data)
     user_message = data.get("message")
-    print(user_message)
+    if not user_message:
+        return jsonify({"error": "No message provided."}), 400
     ai_response = get_completion(user_message)
-    print(ai_response)
     if ai_response:
-        return jsonify({"response": ai_response})
+        new_chat_message = ChatMessage(
+            user_id=user_id,
+            message=user_message,
+            response=ai_response,
+        )
+
+        db.session.add(new_chat_message)
+        db.session.commit()
+
+        result = chat_message_schema.dump(new_chat_message)
+        return jsonify(result), 200
     else:
         return jsonify({"error": "Failed to get response from AI"}), 500
 

@@ -32,14 +32,10 @@ class UserAuth(db.Model, SerializerMixin):
         "ChatMessage", back_populates="user", cascade="all, delete-orphan"
     )
 
-    openai_interactions = db.relationship("OpenAIInteraction", back_populates="user")
     orders = db.relationship("Order", back_populates="user")
 
     @validates("email")
     def validate_email(self, key, address):
-        # Validate email format
-        assert re.match("[^@]+@[^@]+\.[^@]+", address), "Invalid email address"
-        # Validate email length
         assert len(address) >= 3, f"{key} must be at least 3 characters long"
         return address
 
@@ -88,11 +84,6 @@ class ShippingInfo(db.Model, SerializerMixin):
     def validate_postal_code(self, key, code):
         assert re.match("^\d{5}(-\d{4})?$", code), "Invalid postal code format"
         return code
-
-    @validates("phone_number")
-    def validate_phone_number(self, key, number):
-        assert re.match("^\+?1?\d{9,15}$", number), "Invalid phone number format"
-        return number
 
     def __repr__(self):
         return f"<ShippingInfo {self.id} for User {self.user_id}>"
@@ -314,8 +305,14 @@ class ChatMessage(db.Model, SerializerMixin):
     user_id = db.Column(
         db.Integer, db.ForeignKey("user_auth.id"), nullable=False
     )  # Link to the user who sent/received the message
-    message = db.Column(db.Text, nullable=False)  # Content of the message
-    response = db.Column(db.Text, nullable=False)  # System response to the message
+    message = db.Column(db.Text, nullable=False)  # User's message content
+    response = db.Column(db.Text, nullable=True)  # system response to the message
+    # request_data = db.Column(
+    #     db.Text, nullable=True
+    # )  # Data sent to OpenAI API (from the user)
+    # response_data = db.Column(
+    #     db.Text, nullable=True
+    # )  # Data received from OpenAI API (to the user)
     timestamp = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False
     )  # Timestamp of the message exchange
@@ -325,7 +322,6 @@ class ChatMessage(db.Model, SerializerMixin):
     )  # Links back to the user involved in the chat
 
     def __repr__(self):
-        # Representation to easily identify message exchanges in logs.
         return f"<ChatMessage {self.id} User ID: {self.user_id}>"
 
 
@@ -346,28 +342,3 @@ class AITrainingData(db.Model, SerializerMixin):
     def __repr__(self):
         # Representation to easily identify AI training data entries.
         return f"<AITrainingData {self.id}>"
-
-
-# OpenAIInteraction model captures interactions with OpenAI's API, including request and response data.
-class OpenAIInteraction(db.Model, SerializerMixin):
-    __tablename__ = "openai_interactions"
-
-    id = db.Column(
-        db.Integer, primary_key=True
-    )  # Unique identifier for each interaction
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("user_auth.id"), nullable=True
-    )  # Optional link to the user initiating the interaction
-    request_data = db.Column(db.Text, nullable=False)  # Data sent to OpenAI API
-    response_data = db.Column(db.Text, nullable=False)  # Data received from OpenAI API
-    created_at = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False
-    )  # Timestamp of the interaction
-
-    user = db.relationship(
-        "UserAuth", back_populates="openai_interactions"
-    )  # Links back to the user, if applicable
-
-    def __repr__(self):
-        # Provides a concise summary of the interaction for logging and debugging purposes.
-        return f"<OpenAIInteraction {self.id} User ID: {self.user_id}>"
