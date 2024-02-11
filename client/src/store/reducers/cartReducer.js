@@ -55,6 +55,8 @@ export const cartReducer = (state = initialState, action) => {
             };
         default:
             return state;
+        case "SET_MESSAGES":
+            return { ...state, messages: action.payload };
     }
 };
 export default cartReducer;
