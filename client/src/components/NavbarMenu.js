@@ -104,6 +104,13 @@ export default function NavbarMenu() {
                                     >
                                         Contact
                                     </Link>
+                                    <Link
+                                        to="/techsupport"
+                                        className="-m-2 block p-2 font-medium text-black"
+                                        onClick={handleCloseMenu}
+                                    >
+                                        Tech Support
+                                    </Link>
                                 </div>
 
                                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
