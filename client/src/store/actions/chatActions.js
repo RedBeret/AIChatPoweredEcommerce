@@ -44,3 +44,18 @@ export const sendMessage = (messageContent) => async (dispatch) => {
         console.error("Error sending message:", error.message);
     }
 };
+
+export const fetchMessages = () => async (dispatch) => {
+    try {
+        const response = await fetch("/chat_messages", {
+            credentials: "include",
+        });
+        if (response.ok) {
+            const data = await response.json();
+            dispatch({ type: "SET_MESSAGES", payload: data });
+        } else {
+        }
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+    }
+};

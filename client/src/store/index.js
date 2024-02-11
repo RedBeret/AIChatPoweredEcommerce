@@ -5,6 +5,7 @@ import productReducer from "./reducers/productReducer";
 import orderReducer from "./reducers/orderReducer";
 import shippingReducer from "./reducers/shippingReducer";
 import chatReducer from "./reducers/chatReducer";
+import messagesReducer from "./reducers/messagesReducer";
 
 const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
         orders: orderReducer,
         shipping: shippingReducer,
         chat: chatReducer,
+        messages: messagesReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

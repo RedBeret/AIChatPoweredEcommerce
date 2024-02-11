@@ -21,6 +21,7 @@ export const authenticateUser =
                     user: data,
                 },
             });
+
             setSuccess("Login successful");
         } catch (error) {
             console.error("Error during login:", error);
@@ -149,14 +150,21 @@ export const deleteUser =
 export const logoutUser = (history) => async (dispatch) => {
     dispatch({ type: "AUTH_START" });
     try {
-        await fetch("/logout", {
+        const response = await fetch("/logout", {
             method: "POST",
             credentials: "include",
         });
+        if (response.ok) {
+            dispatch({ type: "AUTH_LOGOUT" });
+            dispatch({ type: "CLEAR_USER_DATA" });
+
+            localStorage.removeItem("token");
+
+            history.push("/auth/login");
+        } else {
+            console.error("Logout failed:", response.statusText);
+        }
     } catch (error) {
         console.error("Error during logout:", error);
-    } finally {
-        dispatch({ type: "AUTH_LOGOUT" });
-        history.push("/auth/login");
     }
 };
