@@ -15,7 +15,6 @@ from models import (
     AITrainingData,
     ChatMessage,
     Color,
-    OpenAIInteraction,
     Order,
     OrderDetail,
     Product,
@@ -136,18 +135,6 @@ def seed_database():
                 timestamp=datetime.utcnow(),
             )
             db.session.add(chat_message)
-
-        db.session.commit()
-
-        # Create fake data for OpenAIInteractions
-        for _ in range(10):
-            interaction = OpenAIInteraction(
-                user_id=random.choice(user_ids),
-                request_data=fake.sentence(),
-                response_data=fake.sentence(),
-                created_at=datetime.utcnow(),
-            )
-            db.session.add(interaction)
 
         db.session.commit()
 

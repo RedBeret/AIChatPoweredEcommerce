@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
+import openai
+from click import prompt
 from dotenv import load_dotenv
 
 load_dotenv()
-# Standard library imports
 import logging
 import os
 
 import bcrypt
 from openai import OpenAI
 
-client = OpenAI()
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 import traceback
 
 from config import api, app, db, ma, openai_client
-from flask import Flask, current_app, jsonify, make_response, request, session
-from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
+from flask import jsonify, make_response, request, session
+from flask_bcrypt import Bcrypt
 from flask_marshmallow import fields
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import Schema, ValidationError, fields, post_dump, validate
+from marshmallow import Schema, ValidationError, fields, validate
 from models import (
     ChatMessage,
     Color,
@@ -33,12 +31,8 @@ from models import (
     db,
 )
 from openai import OpenAI
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 
-# Local imports
-
-
-# Builds app, set attributes
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
@@ -50,7 +44,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 
 bcrypt = Bcrypt(app)
-# db = SQLAlchemy(app)
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 
 @app.route("/")
@@ -221,15 +215,17 @@ class UserLoginResource(Resource):
 
 
 class UserLogoutResource(Resource):
+
     def post(self):
         """
         Handles the logout process for users.
-
-        Upon logout:
-        - Clears the Flask session to remove any stored user information.
+        Clears the Flask session to remove any stored user information and
+        instructs the browser to clear the session cookie.
         """
         session.clear()
-        return jsonify(message="Logout successful"), 200
+        response = make_response(jsonify({"message": "Logout successful"}), 200)
+        response.set_cookie("session", "", expires=0)  # Correct way to clear the cookie
+        return response
 
 
 # @app.errorhandler(Exception)
@@ -415,7 +411,6 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     )
 
 
-# Product Resource handling with JWT for certain operations
 class ProductResource(Resource):
     def get(self, product_id=None):
         if product_id:
@@ -538,153 +533,117 @@ class OrderResource(Resource):
 # --------------------------------- Chatbot Resource ---------------------------------#
 
 
-# ChatMessage Resource
-class ChatMessageResource(Resource):
-    def get(self):
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"error": "Authentication required"}), 401
+class ChatMessageSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = ChatMessage
+        load_instance = True
+        fields = (
+            "id",
+            "user_id",
+            "message",
+            "response",
+            "request_data",
+            "response_data",
+            "timestamp",
+        )
 
-        messages = ChatMessage.query.filter_by(user_id=user_id).all()
-        serialized_messages = [
-            {
-                "message": msg.message,
-                "response": msg.response,
-                "timestamp": msg.timestamp.isoformat(),
-            }
-            for msg in messages
+
+chat_message_schema = ChatMessageSchema()
+
+
+def get_completion(
+    user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150
+):
+    last_messages = (
+        ChatMessage.query.filter_by(user_id=user_id)
+        .order_by(ChatMessage.timestamp.desc())
+        .limit(3)
+        .all()
+    )
+
+    messages = (
+        [
+            {"role": "system", "content": "You are a helpful assistant."},
         ]
-        return jsonify(serialized_messages), 200
+        + [
+            {
+                "role": "user" if msg.user_id == user_id else "assistant",
+                "content": msg.message or msg.response,
+            }
+            for msg in reversed(last_messages)
+        ]
+        + [
+            {"role": "user", "content": user_message},
+        ]
+    )
 
-    def post(self):
-        user_id = session.get("user_id")
-        if not user_id:
-            return make_response(jsonify({"error": "User not authenticated."}), 401)
-
-        data = request.json
-        user_message = data.get("message")
-        thread_id = data.get("thread_id", None)
-
-        if not user_message:
-            return make_response(jsonify({"error": "Message is required."}), 400)
-
-        try:
-            messages_payload = [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_message},
-            ]
-
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages_payload,
-                temperature=0.5,
-                max_tokens=150,
-                thread_id=thread_id,
-            )
-
-            ai_response = response.choices[0].message.content
-            thread_id = response.get("thread_id", thread_id)
-
-            chat_message = ChatMessage(
-                user_id=user_id,
-                message=user_message,
-                response=ai_response,
-            )
-            db.session.add(chat_message)
-            db.session.commit()
-
-            return (
-                jsonify(
-                    {
-                        "user_message": user_message,
-                        "ai_response": ai_response,
-                        "thread_id": thread_id,
-                    }
-                ),
-                200,
-            )
-
-        except Exception as e:
-            current_app.logger.error(f"An error occurred: {e}")
-            traceback.print_exc()
-            return make_response(jsonify({"error": str(e)}), 500)
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        if response.choices and response.choices[0].message:
+            return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error: {e}")
+    return None
 
 
-# Routing
-api.add_resource(ChatMessageResource, "/chat_messages", endpoint="chat_messages")
-api.add_resource(
-    ChatMessageResource,
-    "/chat_messages/<int:message_id>",
-    endpoint="chat_message_by_id",
-)
+@app.route("/chat_messages", methods=["POST"])
+def chat():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "You must be signed in to send messages."}), 403
+
+    data = request.json
+    user_message = data.get("message")
+    if not user_message:
+        return jsonify({"error": "No message provided."}), 400
+
+    ai_response = get_completion(user_id, user_message)
+
+    if ai_response:
+        new_chat_message = ChatMessage(
+            user_id=user_id,
+            message=user_message,
+            response=ai_response,
+        )
+
+        db.session.add(new_chat_message)
+        db.session.commit()
+
+        result = chat_message_schema.dump(new_chat_message)
+        return jsonify(result), 200
+    else:
+        return jsonify({"error": "Failed to get response from AI"}), 500
+
+
+@app.route("/user_messages", methods=["GET"])
+def user_messages():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "User not logged in."}), 401
+
+    user_messages = (
+        ChatMessage.query.filter_by(user_id=user_id)
+        .order_by(ChatMessage.timestamp.asc())
+        .all()
+    )
+    messages = chat_message_schema.dump(user_messages, many=True)
+    return jsonify(messages), 200
+
+
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
 api.add_resource(ShippingInfoResource, "/shipping_info")
 api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
 api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
-api.add_resource(
-    ChatMessageResource, "/chat_messages", "/chat_messages/<int:message_id>"
-)
 api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
 api.add_resource(SessionCheckResource, "/check_session")
 
 
-def main():
-    """CLI interface for interacting with the chatbot."""
-    print("Welcome to the ChatPoweredEcommerce CLI chat interface.")
-    client = app.test_client()
-    thread_id = None
-
-    with client:
-        with client.session_transaction() as sess:
-            sess["user_id"] = 1
-
-        while True:
-            user_input = input("You: ")
-            if user_input.lower() == "exit":
-                print("Exiting the chat interface...")
-                break
-
-            data = {"message": user_input}
-            if thread_id:
-                data["thread_id"] = thread_id
-
-            response = client.post("/chat_messages", json=data)
-            if response.status_code == 200:
-                response_data = response.get_json()
-                print("Bot:", response_data["ai_response"])
-                thread_id = response_data.get("thread_id", thread_id)
-            else:
-                print(f"An error occurred: {response.status_code}")
-
-
-def simulate_chat():
-    """Simulates chat interaction with the chat endpoint."""
-    client = app.test_client()
-    thread_id = None
-
-    print("Welcome to the ChatPoweredEcommerce CLI chat interface.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            print("Exiting chat interface.")
-            break
-
-        data = {"message": user_input}
-        if thread_id:
-            data["thread_id"] = thread_id
-
-        response = client.post("/chat_messages", json=data)
-        if response.status_code == 200:
-            response_data = response.get_json()
-            ai_response = response_data.response
-            thread_id = response_data.get("thread_id", thread_id)
-            print("Bot:", ai_response)
-        else:
-            print("An error occurred. Please try again.")
-
-
 if __name__ == "__main__":
-    # main()
     app.run(port=5555, debug=True)

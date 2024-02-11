@@ -2,59 +2,30 @@ import os
 
 import openai
 from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, jsonify, request
 from openai import OpenAI
 
-load_dotenv()
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 
 app = Flask(__name__)
 
 TEMP_USER_ID = 1
 
 
-@app.route("/chat_messages", methods=["POST"])
-def chat():
-    data = request.json
-    user_message = data.get("message")
-    thread_id = data.get("thread_id")
+assistant_id = OPENAI_ASSISTANT_ID
 
-    if not thread_id:
-        thread_response = client.threads.create()
-        thread_id = thread_response.id
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": user_message},
-        ],
-        thread_id=thread_id,
-        temperature=0.7,
-        max_tokens=150,
-    )
-
-    ai_response = response.choices[0].message.content.strip()
-    return jsonify({"response": ai_response, "thread_id": thread_id})
+app = Flask(__name__)
 
 
-def add_message_and_get_response(thread_id, user_message):
-    message_response = openai.Message.create(
-        thread_id=thread_id, role="user", content=user_message
-    )
-
-    run_response = openai.Run.create(
-        thread_id=thread_id,
-        assistant_id="your-assistant-id",
-    )
-
-    ai_response = run_response.choices[0].message.content
-    return ai_response
-
-
-def get_completion(
-    prompt, model="gpt-4", temperature=0.7, max_tokens=150, thread_id=None
-):
+def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150):
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt},
@@ -65,16 +36,19 @@ def get_completion(
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
-            thread_id=thread_id,
         )
         if response.choices and response.choices[0].message:
-            return response.choices[0].message.content.strip(), thread_id
+            return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Error: {e}")
-    return None, thread_id
+    return None
 
 
 def main():
+    # Start Flask app
+    app.run(port=5555, debug=True, use_reloader=False)
+
+    # CLI testing
     thread_id = None
 
     while True:
@@ -84,11 +58,10 @@ def main():
             break
 
         if not thread_id:
-            thread_response = client.threads.create()
-            thread_id = thread_response.id
-            print(f"New thread created with ID: {thread_id}")
 
-        response, thread_id = get_completion(prompt, thread_id=thread_id)
+            pass
+
+        response = get_completion(prompt)
         print("Response:", response)
 
 
