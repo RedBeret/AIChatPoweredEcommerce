@@ -184,7 +184,6 @@ class UserLoginResource(Resource):
 
     def post(self):
         data = request.get_json()
-        # Check if both username and password are provided
         if not data or "username" not in data or "password" not in data:
             return make_response(
                 jsonify({"error": "Username and password are required"}), 400
@@ -224,16 +223,8 @@ class UserLogoutResource(Resource):
         """
         session.clear()
         response = make_response(jsonify({"message": "Logout successful"}), 200)
-        response.set_cookie("session", "", expires=0)  # Correct way to clear the cookie
+        response.set_cookie("session", "", expires=0)
         return response
-
-
-# @app.errorhandler(Exception)
-# def handle_unexpected_error(error):
-#     return (
-#         jsonify({"error": "An unexpected error occurred", "details": str(error)}),
-#         500,
-#     )
 
 
 class SessionCheckResource(Resource):
@@ -264,9 +255,6 @@ class SessionCheckResource(Resource):
         except Exception as e:
             logging.error(f"Error in SessionCheckResource: {str(e)}")
             return jsonify({"error": "Internal server error", "details": str(e)}), 500
-
-
-# User Tested Methods with Insomnia/Postman
 
 
 class ShippingInfoSchema(ma.SQLAlchemyAutoSchema):
@@ -393,7 +381,6 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
 
     def price_to_cents(self, value):
         try:
-            # Assume value is a string in dollar format, e.g., "12.99"
             return int(float(value) * 100)
         except ValueError:
             raise ValidationError("Price must be a valid number.")

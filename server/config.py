@@ -16,7 +16,6 @@ from sqlalchemy import MetaData
 
 from flask_session import Session
 
-# Load environment variables
 load_dotenv()
 
 
