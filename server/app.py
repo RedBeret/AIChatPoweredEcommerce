@@ -620,6 +620,21 @@ def chat():
         return jsonify({"error": "Failed to get response from AI"}), 500
 
 
+@app.route("/user_messages", methods=["GET"])
+def user_messages():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "User not logged in."}), 401
+
+    user_messages = (
+        ChatMessage.query.filter_by(user_id=user_id)
+        .order_by(ChatMessage.timestamp.asc())
+        .all()
+    )
+    messages = chat_message_schema.dump(user_messages, many=True)
+    return jsonify(messages), 200
+
+
 api.add_resource(UserLoginResource, "/login")
 api.add_resource(UserLogoutResource, "/logout")
 api.add_resource(UserAuthResource, "/user_auth")
