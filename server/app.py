@@ -551,11 +551,32 @@ class ChatMessageSchema(ma.SQLAlchemyAutoSchema):
 chat_message_schema = ChatMessageSchema()
 
 
-def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150):
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": prompt},
-    ]
+def get_completion(
+    user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150
+):
+    last_messages = (
+        ChatMessage.query.filter_by(user_id=user_id)
+        .order_by(ChatMessage.timestamp.desc())
+        .limit(3)
+        .all()
+    )
+
+    messages = (
+        [
+            {"role": "system", "content": "You are a helpful assistant."},
+        ]
+        + [
+            {
+                "role": "user" if msg.user_id == user_id else "assistant",
+                "content": msg.message or msg.response,
+            }
+            for msg in reversed(last_messages)
+        ]
+        + [
+            {"role": "user", "content": user_message},
+        ]
+    )
+
     try:
         response = client.chat.completions.create(
             model=model,
@@ -575,11 +596,14 @@ def chat():
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "You must be signed in to send messages."}), 403
+
     data = request.json
     user_message = data.get("message")
     if not user_message:
         return jsonify({"error": "No message provided."}), 400
-    ai_response = get_completion(user_message)
+
+    ai_response = get_completion(user_id, user_message)
+
     if ai_response:
         new_chat_message = ChatMessage(
             user_id=user_id,
