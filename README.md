@@ -1,22 +1,146 @@
-# Phase 4 Full-Stack Application Project Template
+# AiChatPoweredEcommerce
 
-## Learning Goals
+# Project Introduction
 
-- Discuss the basic directory structure of a full-stack Flask/React application.
-- Carry out the first steps in creating your Phase 4 project.
+## Overview of AiChatPoweredEcommerce
 
----
+Welcome to AiChatPoweredEcommerce, a revolutionary e-commerce platform designed to transform the online shopping experience through the power of artificial intelligence. Note that I am early in my software engineer career coming out of a bootcamp so there will be areas you can find to improve. With that, I have learned so much as well as integrated some AI for some next generation tech. Lets continue, as in an era where convenience, speed, and personalization are not just valued but expected, this platform stands out by offering an unparalleled user experience, seamlessly integrating cutting-edge AI technology with a sleek, user-friendly interface.
 
-## Introduction
+At the heart of AiChatPoweredEcommerce lies two innovative AI-powered chat support systems, which leverages advanced natural language processing and machine learning algorithms from industry leaders like Voiceflow and OpenAI. This system is designed to understand and anticipate the needs of our users, offering instant, accurate support, personalized shopping recommendations, and even handling complex queries with ease. Whether you're looking for product details, shipping information, or just need shopping advice, our AI chatbot is there to enhance your shopping experience, 24/7.
 
-Fork and clone this lesson for a template for your full-stack application. Take
-a look at the directory structure before we begin (NOTE: node_modules will be
-generated in a subsequent step):
+But AiChatPoweredEcommerce is more than just its AI features. We are committed to sustainability and efficiency, offering a wide range of products that cater to the conscious consumer. From eco-friendly packaging to a carefully curated selection of products, every aspect of our platform is designed with the planet in mind. Our intuitive design ensures that finding and purchasing products is not only straightforward but enjoyable, with detailed product descriptions, high-quality images, and an easy-to-navigate interface. Yes, for this project also created some ficticious business background, researched next gen phones and integrated troubleshooting latest tech as extra.
 
-```console
-$ tree -L 2
-$ # the -L argument limits the depth at which we look into the directory structure
-.
+Behind the scenes, our platform is powered by a robust Flask backend and a dynamic React frontend, ensuring fast, responsive interactions across all devices. Security is a top priority, with state-of-the-art encryption, secure authentication processes, and stringent data protection measures in place to safeguard user information.
+
+In summary, AiChatPoweredEcommerce isn't just an online store; it's a comprehensive shopping solution that brings the future of retail to today's consumers. By blending AI innovation with a strong commitment to sustainability and user experience, we're not just changing how people shop online—we're enhancing it in ways previously unimaginable.
+
+## Technical Overview
+
+This platform, AiChatPoweredEcommerce, is engineered using a blend of modern frontend and backend technologies, along with advanced AI integrations, to deliver a seamless and secure online shopping experience. Here's a closer look at the technological backbone of this e-commerce solution:
+
+- **Technology Stack**: 
+    - **Frontend Technologies**: At the heart of our user interface is React, a powerful JavaScript library that enables us to build a dynamic and responsive frontend. Complemented by Tailwind CSS, we achieve an elegant and adaptive design that ensures our platform is accessible across all devices and screen sizes. This combination allows for rapid development and a high degree of customization, enhancing the overall user experience with interactive and visually appealing interfaces.
+    - **Backend Technologies**: Flask, a lightweight WSGI web application framework, serves as our backend cornerstone. It provides us with the flexibility and tools necessary to create robust API endpoints, manage database operations, and handle user authentication and sessions securely. Flask's simplicity and extensibility make it an ideal choice for our scalable e-commerce platform, supporting everything from product listings to order management. It utilizes python to interact with our server models.
+    - **AI Integration and Chat Support**: Leveraging the capabilities of Voiceflow and OpenAI's ChatGPT, we offer an AI-powered chat support system that stands out for its ability to understand and respond to customer inquiries in real-time. This integration not only enhances customer service by providing instant support and recommendations but also personalizes the shopping experience based on user interactions and preferences. The AI chatbot is trained on a diverse dataset, enabling it to handle a wide range of queries with remarkable accuracy.
+    - **Database and Security**: SQLite, known for its reliability and ease of use, is our chosen database management system. It efficiently handles our data storage needs, from user profiles to product catalogs. On the security front, we employ bcrypt for hashing passwords, ensuring that user credentials are stored securely. Sessions and cookies are meticulously managed to maintain user state and provide a secure, personalized shopping experience. Together, these measures fortify our platform against common security threats, safeguarding user data and transactions.
+
+This technical foundation enables AiChatPoweredEcommerce to offer a unique and secure online shopping environment, where users can enjoy a seamless interaction with AI-driven support, backed by robust technologies.
+
+## Detailed Features Breakdown
+
+Our platform, AiChatPoweredEcommerce, integrates a variety of features designed to enhance user experience, streamline product management, and leverage AI for improved customer service. Here's a detailed look at some of the key functionalities:
+
+- **User Authentication System**
+    - **Secure Login and Registration**: Our platform employs a robust authentication flow that ensures user data security from registration to login. Passwords are securely hashed using bcrypt, a reliable hashing algorithm that protects against common vulnerabilities. User sessions and cookies are managed efficiently, maintaining state across the website for a personalized experience.
+    - **User Account Management**: Users can easily update their password and delete their account, with both actions handled securely to protect user data. The update password feature allows users to maintain account security, while the delete account option provides a way to remove personal data from the platform, adhering to privacy best practices.
+
+- **Product Management**
+    - **Dynamic Product Listings**: Our product listings are dynamic and integrated with the backend to ensure real-time updates. Products are displayed with customizable options, allowing users to filter and select based on their preferences. This integration ensures that product availability and details are always up to date.
+    - **Product Detail Pages**: Each product has a detailed page that provides comprehensive information, including descriptions, images, and customizable options. These pages are designed to give users a clear understanding of the product, aiding in their purchasing decision.
+
+- **AI-Powered Features**
+    - **AI Chat Support**: To enhance customer service, our platform features AI-powered chat support, utilizing both Voiceflow and OpenAI's ChatGPT. This system offers real-time responses to customer inquiries, ranging from product questions to support requests, providing a seamless support experience.
+    - **Personalized Shopping Recommendations**: While the platform focuses on AI chat support, integrating personalized shopping recommendations through AI analysis of user behavior and preferences represents a potential area for future enhancement, aiming to tailor the shopping experience to individual user needs. 
+
+- **Shopping and Checkout Process**
+    - **Interactive Shopping Cart Experience**: The shopping cart is designed for an interactive and user-friendly experience. Users can add items, adjust quantities, and review their selections before proceeding to checkout. This functionality ensures a smooth transition from browsing to purchasing.
+    - **Seamless Checkout Flow**: Our checkout process is streamlined to minimize friction, featuring a simple form for shipping and payment information, culminating in a clear and concise order confirmation step. This process is designed to make completing a purchase as straightforward as possible.
+    - **Post-Purchase Support**: Following a purchase, users have access to comprehensive post-purchase support, including technical assistance for any queries or issues that may arise. This ensures that users feel supported throughout their entire shopping journey, from browsing to after-sales service.
+
+Each of these features contributes to creating a secure, efficient, and user-friendly e-commerce platform, making AiChatPoweredEcommerce a standout choice for online shopping.
+
+## Codebase Highlights
+
+The development of AiChatPoweredEcommerce involved meticulous planning, innovative thinking, and the strategic utilization of modern technologies. This section highlights the unique implementations, custom components, and the advanced usage of libraries and frameworks that underscore the platform's robustness and innovative edge.
+
+### Unique Code Implementations and Solutions
+
+- **AI Integration for Enhanced Customer Support**: The platform integrates AI-powered chat support using Voiceflow and OpenAI's ChatGPT, showcasing an innovative approach to automate customer service and provide real-time, personalized assistance.
+- **Security Implementations**: Secure user authentication and session management were achieved through Flask sessions and bcrypt hashing, highlighting a commitment to protecting user data and privacy.
+
+### Custom Hooks and Components
+
+- **useCartContext Hook**: A custom React hook that manages the shopping cart's state across the application, facilitating easy addition, deletion, and update of cart items, demonstrating efficient state management and cross-component communication.
+- **ProductDetail Component**: A bespoke React component that renders detailed product information, including dynamic images, descriptions, and customizable options, showcasing React's capability to handle complex state logic and conditional rendering.
+- **CheckoutForm Component**: Leveraging Formik and Yup for form handling and validation, this component encapsulates the checkout process, including user information collection and order submission, illustrating an advanced use of form libraries for improved user experience.
+
+### Advanced Usage of Libraries and Frameworks
+
+- **Tailwind CSS for Responsive Design**: The application extensively utilizes Tailwind CSS for styling, employing its utility-first approach to achieve a responsive and aesthetically pleasing design across devices without excessive CSS files.
+- **Flask SQLAlchemy for ORM**: By leveraging Flask SQLAlchemy, the platform demonstrates an advanced use of Object-Relational Mapping (ORM) for database interactions, simplifying CRUD operations and ensuring efficient data management.
+- **Redux for State Management**: The use of Redux alongside React showcases advanced state management techniques, ensuring a single source of truth for the application's state and facilitating communication between components.
+
+The codebase of AiChatPoweredEcommerce stands as a testament to the power of combining modern technologies with innovative coding practices. Each line of code, from the implementation of AI for customer support to the use of custom hooks for state management, contributes to a seamless, secure, and engaging shopping experience.
+
+## Future Roadmap and Enhancements
+
+The AiChatPoweredEcommerce platform is continually evolving, with a commitment to enhancing user experience, security, and performance. Here’s a glimpse into the future roadmap and potential enhancements planned for the platform:
+
+### Planned Features
+- **Enhanced Product Discovery**: Introduction of advanced filtering and search functionalities to enable users to find products more efficiently, based on preferences, categories, or ratings.
+- **Multi-Language Support**: To cater to a global audience, implementing multi-language support is on the horizon, aiming to provide a localized shopping experience for users worldwide.
+- **User Reviews and Ratings**: Incorporating a system for users to leave reviews and ratings for products, enhancing the community aspect of the platform and aiding others in making informed purchasing decisions.
+
+### Refactoring for Scalability and Maintainability
+- **Modularizing the Flask Application**: Break down the `app.py` file into smaller, modular files focusing on specific functionalities (e.g., `auth.py` for authentication routes, `product.py` for product management, etc.). This will enhance code readability and maintainability.
+- **Separate Models File**: Similar to the above, split the `models.py` into individual files within a models directory (e.g., `user.py`, `product.py`, `order.py`), each defining related models. This approach simplifies managing and scaling the database schema.
+
+### Payment Integration
+- **Stripe Payment Integration**: Integrate Stripe for handling secure payments. This will not only provide a seamless checkout experience but also enable the platform to support a variety of payment methods, enhancing customer trust and satisfaction.
+
+### AI and Chat Support Enhancements
+- **Upgrade to OpenAI Assistant API**: Transition from using legacy chat completions to the newer OpenAI Assistant API. This upgrade will provide more sophisticated and context-aware interactions, significantly improving the AI chat support system's effectiveness.
+- **Department-Specific AI Agents**: Develop and train separate AI models for different departments (e.g., sales, technical support, customer service). This specialization allows for more accurate and relevant responses, improving the overall user experience.
+
+### Backend and Database Enhancements
+- **Database Optimization**: Review and optimize the database schema and queries for performance. This could involve indexing critical fields, normalizing data where appropriate, and implementing caching strategies to reduce load times.
+- **API Rate Limiting and Caching**: Introduce rate limiting for your APIs to prevent abuse and ensure service availability. Additionally, implement caching for frequently requested data to reduce database load and improve response times.
+
+### Frontend Improvements
+- **React Performance Optimization**: Utilize React's lazy loading and suspense for code-splitting and dynamically loading components. Implement memoization and pure components to minimize unnecessary re-renders and optimize performance.
+
+### Security and Compliance
+- **Enhanced Security Measures**: Beyond implementing 2FA, ensure that all data transmissions are encrypted using HTTPS. Regularly update dependencies to mitigate vulnerabilities and conduct penetration testing to identify security gaps.
+- **Compliance with Regulations**: Ensure the platform complies with relevant regulations, such as GDPR for user data privacy and PCI DSS for payment processing. This will not only protect the platform and its users but also build trust.
+
+These enhancements and organizational changes are designed to prepare AiChatPoweredEcommerce for future growth, scalability, and improved user experience. By focusing on these areas, the platform can continue to innovate and maintain its competitive edge in the e-commerce space.
+
+## Lessons Learned
+
+### Integrating Diverse Technologies
+- **Challenge of Integration**: One of the primary lessons from this project was navigating the complexities of integrating diverse technologies such as React, Flask, SQLite, and AI platforms like Voiceflow and OpenAI. Learning to ensure seamless communication between the frontend and backend, and between our application and third-party AI services, required meticulous attention to detail and a deep understanding of each technology's capabilities and limitations as well as their beta technology implementation limits.
+
+### Security and Data Protection
+- **Security First Approach**: Implementing bcrypt for hashing and managing user sessions taught me the importance of a security-first approach, especially in handling sensitive user data. It underscored the need for rigorous testing and validation mechanisms to safeguard against vulnerabilities. I attempted JWT token session but troubleshooting as I developed became an issue in my two week limit for this project thus a future enhancement and just did Flask Session, Cookies and bcrypt.
+
+### Enhanced AI Chat Support with Custom Workarounds
+- **AI Customization and Training**: Developing the AI chat support for AiChatPoweredEcommerce presented unique challenges, particularly in training the models to understand and respond to user queries with high accuracy. A critical lesson learned was the importance of continuous training and implementing feedback loops. These strategies are essential in refining the AI's performance, enabling the chatbot to effectively handle a diverse array of customer service scenarios.
+
+A notable challenge I encountered was the chatbot's inability to recall previous conversations, which limited its context awareness and made the interactions feel less personalized and coherent. To overcome this limitation, I devised a creative workaround: for every user submission, I compiled the last three conversations. This compilation included both the previous and current messages, and I also introduced a system message using a txt file designed to prompt the AI. This approach alloId us to engineer the conversations to include FAQs, perform sentiment analysis, and generate more contextually relevant responses. 
+
+This workaround significantly improved the chatbot's functionality, making it more adept at providing coherent and context-aware support. It showcases our commitment to innovative solutions and highlights the project's adaptive approach to overcoming technical challenges.
+
+### Frontend Performance and Usability
+- **Optimizing User Experience**: The project reinforced the value of a responsive and intuitive user interface. Leveraging React's capabilities for dynamic updates and Tailwind CSS for styling, we learned how critical frontend performance and design are in retaining user engagement and satisfaction.
+
+### Scalability and Maintainability
+- **Code Organization for Future Growth**: As the project evolved, it became clear that maintaining a scalable and manageable codebase was crucial. The decision to modularize React components, for instance, was driven by the need to facilitate future developments and enhancements without compromising on code quality or introducing technical debt.
+
+### Collaboration and Agile Development
+- **Teamwork and Agile Practices**: The development process was a practical lesson in the importance of teamwork, effective communication, and agile practices. Regular stand-ups, code reviews, and adaptive planning helped us navigate challenges and pivot as required, underscoring the agile methodology's value in managing complex projects.
+
+### Continuous Learning
+- **Embrace Continuous Learning**: Lastly, this project was a testament to the continuous learning journey in software development. Whether it was a new programming pattern, a library, or an AI technology, the project encouraged an ethos of curiosity and improvement, reminding us that the landscape of technology is ever-evolving, and so must we.
+
+These lessons, learned through trials, errors, and successes, have not only contributed to the project's success but also enriched our collective knowledge and expertise, setting a solid foundation for future endeavors in the tech industry.
+
+## Platform Setup Guide
+
+Welcome to the AiChatPoweredEcommerce Platform. This guide will walk you through the steps to set up your development environment for both the backend (Flask) and frontend (React) components of the application.
+
+## Directory Structure
+
+```
 ├── CONTRIBUTING.md
 ├── LICENSE.md
 ├── Pipfile
@@ -24,334 +148,155 @@ $ # the -L argument limits the depth at which we look into the directory structu
 ├── client
 │   ├── README.md
 │   ├── package.json
+│   ├── postcss.config.js
 │   ├── public
-│   └── src
+│   ├── src
+│   │   ├── App.js
+│   │   ├── api
+│   │   ├── assets
+│   │   │   └── img
+│   │   │       ├── VisionXHero.png
+│   │   │       ├── vision_x_logo.png
+│   │   │       ├── visionxhalo.png
+│   │   │       └── visionxphone.png
+│   │   ├── components
+│   │   │   ├── CartContext.js
+│   │   │   ├── CloseAccount.js
+│   │   │   ├── Footer.js
+│   │   │   ├── Hero.js
+│   │   │   ├── InfoSection.js
+│   │   │   ├── InfoSection2.js
+│   │   │   ├── Login.js
+│   │   │   ├── NavbarMenu.js
+│   │   │   ├── Products.js
+│   │   │   ├── Register.js
+│   │   │   ├── ShoppingCart.js
+│   │   │   └── UpdatePassword.js
+│   │   ├── index.css
+│   │   ├── index.js
+│   │   ├── pages
+│   │   │   ├── AboutPage.js
+│   │   │   ├── AuthPages.js
+│   │   │   ├── CheckoutPage.js
+│   │   │   ├── ConfirmationPage.js
+│   │   │   ├── ContactPage.js
+│   │   │   ├── HomePage.js
+│   │   │   ├── ProductDetailPage.js
+│   │   │   ├── ShoppingCartPage.js
+│   │   │   ├── TechSupport.js
+│   │   │   └── TechSupport2.js
+│   │   └── store
+│   │       ├── actions
+│   │       │   ├── authActions.js
+│   │       │   ├── cartActions.js
+│   │       │   ├── chatActions.js
+│   │       │   ├── orderActions.js
+│   │       │   ├── productActions.js
+│   │       │   └── shippingActions.js
+│   │       ├── index.js
+│   │       └── reducers
+│   │           ├── authReducer.js
+│   │           ├── cartReducer.js
+│   │           ├── chatReducer.js
+│   │           ├── messagesReducer.js
+│   │           ├── orderReducer.js
+│   │           ├── productReducer.js
+│   │           └── shippingReducer.js
+│   └── tailwind.config.js
+├── package-lock.json
+├── requirements.txt
 └── server
+    ├── ai.py
     ├── app.py
+    ├── app_utils.py
     ├── config.py
+    ├── data
+    │   └── support_guide.txt
+    ├── migrations
     ├── models.py
-    └── seed.py
+    ├── package-lock.json
+    ├── package.json
+    ├── routes.py
+    ├── seed.py
+    └── validations
 ```
 
-A `migrations` folder will be added to the `server` directory in a later step.
+## Preparing the Backend Environment (`server/`)
+Before initializing the database, ensure you have a `.env` file set up in your `server` directory. This file will store essential environment variables for your Flask application.
 
-The `client` folder contains a basic React application, while the `server`
-folder contains a basic Flask application. You will adapt both folders to
-implement the code for your project .
+### Generating the Secret Key
+1. Open a terminal.
+2. Generate a new secret key by running the following command:
+    ```console
+    python -c 'import secrets; print(secrets.token_hex())'
+    ```
+3. Copy the output; this is your secret key.
 
-NOTE: If you did not previously install `tree` in your environment setup, MacOS
-users can install this with the command `brew install tree`. WSL and Linux users
-can run `sudo apt-get install tree` to download it as well.
+### Creating the .env File
+1. In your `server` directory, create a file named `.env`.
+2. Add the following lines to the `.env` file:
+    ```
+    SECRET_KEY=<Your Secret Key>
+    DB_URI="sqlite:///app.db"
+    
+    OPENAI_API_KEY=<obtained from https://platform.openai.com/api-keys>
+    
+    ```
+   Replace `<Your Secret Key>` with the key you generated.
 
-## Where Do I Start?
-
-Just as with your Phase 3 Project, this will likely be one of the biggest
-projects you've undertaken so far. Your first task should be creating a Git
-repository to keep track of your work and roll back any undesired changes.
-
-### Removing Existing Git Configuration
-
-If you're using this template, start off by removing the existing metadata for
-Github and Canvas. Run the following command to carry this out:
-
-```console
-$ rm -rf .git .canvas
-```
-
-The `rm` command removes files from your computer's memory. The `-r` flag tells
-the console to remove _recursively_, which allows the command to remove
-directories and the files within them. `-f` removes them permanently.
-
-`.git` contains this directory's configuration to track changes and push to
-Github (you want to track and push _your own_ changes instead), and `.canvas`
-contains the metadata to create a Canvas page from your Git repo. You don't have
-the permissions to edit our Canvas course, so it's not worth keeping around.
-
-### Creating Your Own Git Repo
-
-First things first- rename this directory! Once you have an idea for a name,
-move one level up with `cd ..` and run
-`mv python-p4-project-template <new-directory-name>` to change its name (replace
-<new-directory-name> with an appropriate project directory name).
-
-> **Note: If you typed the `mv` command in a terminal within VS Code, you should
-> close VS Code then reopen it.**
-
-> **Note: `mv` actually stands for "move", but your computer interprets this
-> rename as a move from a directory with the old name to a directory with a new
-> name.**
-
-`cd` back into your new directory and run `git init` to create a local git
-repository. Add all of your local files to version control with `git add --all`,
-then commit them with `git commit -m'initial commit'`. (You can change the
-message here- this one is just a common choice.)
-
-Navigate to [GitHub](https://github.com). In the upper-right corner of the page,
-click on the "+" dropdown menu, then select "New repository". Enter the name of
-your local repo, choose whether you would like it to be public or private, make
-sure "Initialize this repository with a README" is unchecked (you already have
-one), then click "Create repository".
-
-Head back to the command line and enter
-`git remote add origin git@github.com:github-username/new-repository-name.git`.
-NOTE: Replace `github-username` with your github username, and
-`new-repository-name` with the name of your new repository. This command will
-map the remote repository to your local repository. Finally, push your first
-commit with `git push -u origin main`.
-
-Your project is now version-controlled locally and online. This will allow you
-to create different versions of your project and pick up your work on a
-different machine if the need arises.
-
----
-
-## Setup
-
-### `server/`
-
-The `server/` directory contains all of your backend code.
-
-`app.py` is your Flask application. You'll want to use Flask to build a simple
-API backend like we have in previous modules. You should use Flask-RESTful for
-your routes. You should be familiar with `models.py` and `seed.py` by now, but
-remember that you will need to use Flask-SQLAlchemy, Flask-Migrate, and
-SQLAlchemy-Serializer instead of SQLAlchemy and Alembic in your models.
-
-The project contains a default `Pipfile` with some basic dependencies. You may
-adapt the `Pipfile` if there are additional dependencies you want to add for
-your project.
-
-To download the dependencies for the backend server, run:
-
+### Installing Dependencies
+After cloning the project, install backend dependencies and activate the virtual environment:
 ```console
 pipenv install
 pipenv shell
 ```
 
-You can run your Flask API on [`localhost:5555`](http://localhost:5555) by
-running:
-
+### Running the Flask API
+To run the Flask API locally (default port 5555):
 ```console
 python server/app.py
 ```
 
-Check that your server serves the default route `http://localhost:5555`. You
-should see a web page with the heading "Project Server".
+## Preparing the Frontend Environment (`client/`)
+The `client/` directory contains the React frontend code.
 
-### `client/`
-
-The `client/` directory contains all of your frontend code. The file
-`package.json` has been configured with common React application dependencies,
-include `react-router-dom`. The file also sets the `proxy` field to forward
-requests to `"http://localhost:5555". Feel free to change this to another port-
-just remember to configure your Flask app to use another port as well!
-
-To download the dependencies for the frontend client, run:
-
+### Installing React Dependencies
+To install frontend dependencies:
 ```console
 npm install --prefix client
 ```
 
-You can run your React app on [`localhost:3000`](http://localhost:3000) by
-running:
-
-```sh
+### Starting the React App
+To start the React app locally (default port 3000):
+```console
 npm start --prefix client
 ```
 
-Check that your the React client displays a default page
-`http://localhost:3000`. You should see a web page with the heading "Project
-Client".
+## Database Initialization and Seeding
+After setting up your `.env` file and installing dependencies, you can initialize and seed your database. Ensure you're in the `server` directory, then run:
 
-## Generating Your Database
+```sh
+export FLASK_APP=app.py
+export FLASK_RUN_PORT=5555
 
-NOTE: The initial project directory structure does not contain the `instance` or
-`migrations` folders. Change into the `server` directory:
-
-```console
-cd server
+{ flask db init && echo "DB init successful"; } || echo "DB init failed, continuing..."
+{ flask db migrate -m "initial migration" && echo "DB migrate successful"; } || echo "DB migrate failed, continuing..."
+{ flask db upgrade head && echo "DB upgrade successful"; } || echo "DB upgrade failed, continuing..."
+{ python seed.py && echo "Seeding successful"; } || echo "Seeding failed"
 ```
 
-Then enter the commands to create the `instance` and `migrations` folders and
-the database `app.db` file:
+These commands will initialize the database, perform migrations, upgrade to the latest version, and seed it with initial data. After this you should see it on your http://localhost:3000/ enjoy! ☺️
 
-```
-flask db init
-flask db upgrade head
-```
+## Contributing
 
-Type `tree -L 2` within the `server` folder to confirm the new directory
-structure:
+We welcome contributions from the community. If you wish to contribute to the project, please follow these steps:
 
-```console
-.
-├── app.py
-├── config.py
-├── instance
-│   └── app.db
-├── migrations
-│   ├── README
-│   ├── __pycache__
-│   ├── alembic.ini
-│   ├── env.py
-│   ├── script.py.mako
-│   └── versions
-├── models.py
-└── seed.py
-```
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
 
-Edit `models.py` and start creating your models. Import your models as needed in
-other modules, i.e. `from models import ...`.
+## License
 
-Remember to regularly run
-`flask db revision --autogenerate -m'<descriptive message>'`, replacing
-`<descriptive message>` with an appropriate message, and `flask db upgrade head`
-to track your modifications to the database and create checkpoints in case you
-ever need to roll those modifications back.
-
-> **Tip: It's always a good idea to start with an empty revision! This allows
-> you to roll all the way back while still holding onto your database. You can
-> create this empty revision with `flask db revision -m'Create DB'`.**
-
-If you want to seed your database, now would be a great time to write out your
-`seed.py` script and run it to generate some test data. Faker has been included
-in the Pipfile if you'd like to use that library.
-
----
-
-#### `config.py`
-
-When developing a large Python application, you might run into a common issue:
-_circular imports_. A circular import occurs when two modules import from one
-another, such as `app.py` and `models.py`. When you create a circular import and
-attempt to run your app, you'll see the following error:
-
-```console
-ImportError: cannot import name
-```
-
-If you're going to need an object in multiple modules like `app` or `db`,
-creating a _third_ module to instantiate these objects can save you a great deal
-of circular grief. Here's a good start to a Flask config file (you may need more
-if you intend to include features like authentication and passwords):
-
-```py
-# Standard library imports
-
-# Remote library imports
-from flask import Flask
-from flask_cors import CORS
-from flask_migrate import Migrate
-from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
-
-# Local imports
-
-# Instantiate app, set attributes
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
-
-# Define metadata, instantiate db
-metadata = MetaData(naming_convention={
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-})
-db = SQLAlchemy(metadata=metadata)
-migrate = Migrate(app, db)
-db.init_app(app)
-
-# Instantiate REST API
-api = Api(app)
-
-# Instantiate CORS
-CORS(app)
-
-```
-
-Now let's review that last line...
-
-#### CORS
-
-CORS (Cross-Origin Resource Sharing) is a system that uses HTTP headers to
-determine whether resources from different servers-of-origin can be accessed. If
-you're using the fetch API to connect your frontend to your Flask backend, you
-need to configure CORS on your Flask application instance. Lucky for us, that
-only takes one line:
-
-```py
-CORS(app)
-
-```
-
-By default, Flask-CORS enables CORS on all routes in your application with all
-fetching servers. You can also specify the resources that allow CORS. The
-following specifies that routes beginning with `api/` allow CORS from any
-originating server:
-
-```py
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-```
-
-You can also set this up resource-by-resource by importing and using the
-`@cross_origin` decorator:
-
-```py
-@app.route("/")
-@cross_origin()
-def howdy():
-  return "Howdy partner!"
-
-```
-
----
-
-## Updating Your README.md
-
-`README.md` is a Markdown file that describes your project. These files can be
-used in many different ways- you may have noticed that we use them to generate
-entire Canvas lessons- but they're most commonly used as homepages for online
-Git repositories. **When you develop something that you want other people to
-use, you need to have a README.**
-
-Markdown is not a language that we cover in Flatiron's Software Engineering
-curriculum, but it's not a particularly difficult language to learn (if you've
-ever left a comment on Reddit, you might already know the basics). Refer to the
-cheat sheet in this lesson's resources for a basic guide to Markdown.
-
-### What Goes into a README?
-
-This README should serve as a template for your own- go through the important
-files in your project and describe what they do. Each file that you edit (you
-can ignore your migration files) should get at least a paragraph. Each function
-should get a small blurb.
-
-You should descibe your application first, and with a good level of detail. The
-rest should be ordered by importance to the user. (Probably routes next, then
-models.)
-
-Screenshots and links to resources that you used throughout are also useful to
-users and collaborators, but a little more syntactically complicated. Only add
-these in if you're feeling comfortable with Markdown.
-
----
-
-## Conclusion
-
-A lot of work goes into a full-stack application, but it all relies on concepts
-that you've practiced thoroughly throughout this phase. Hopefully this template
-and guide will get you off to a good start with your Phase 4 Project.
-
-Happy coding!
-
----
-
-## Resources
-
-- [Setting up a respository - Atlassian](https://www.atlassian.com/git/tutorials/setting-up-a-repository)
-- [Create a repo- GitHub Docs](https://docs.github.com/en/get-started/quickstart/create-a-repo)
-- [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/)
-- [Python Circular Imports - StackAbuse](https://stackabuse.com/python-circular-imports/)
-- [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/)
+Distributed under the MIT License. See `LICENSE` for more information.
