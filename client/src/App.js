@@ -1,13 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     BrowserRouter as Router,
     Switch,
     Route,
-    // Redirect,
+    Redirect,
 } from "react-router-dom";
-// import { useSelector } from "react-redux";
 
-// Your imports
 import Home from "./pages/HomePage";
 import ProductDetail from "./pages/ProductDetailPage";
 import About from "./pages/AboutPage";
@@ -20,24 +18,33 @@ import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
 import TechSupport from "./pages/TechSupport";
 import TechSupport2 from "./pages/TechSupport2";
+import { useDispatch, useSelector } from "react-redux";
+import { checkLoginSession } from "./store/actions/authActions";
 
-// const ProtectedRoute = ({ component: Component, ...rest }) => {
-//     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-//     return (
-//         <Route
-//             {...rest}
-//             render={(props) =>
-//                 isAuthenticated ? (
-//                     <Component {...props} />
-//                 ) : (
-//                     <Redirect to="/auth/login" />
-//                 )
-//             }
-//         />
-//     );
-// };
+const ProtectedRoute = ({ component: Component, ...rest }) => {
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+    return (
+        <Route
+            {...rest}
+            render={(props) =>
+                isAuthenticated ? (
+                    <Component {...props} />
+                ) : (
+                    <Redirect to="/auth/login" />
+                )
+            }
+        />
+    );
+};
 
 export default function App() {
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(checkLoginSession());
+    }, [dispatch]);
+
     return (
         <CartWrapper>
             <Router>
@@ -51,7 +58,10 @@ export default function App() {
                     <Route path="/about" component={About} />
                     <Route path="/checkout" component={Checkout} />
                     <Route path="/confirmation" component={Confirmation} />
-                    <Route path="/techsupport" component={TechSupport} />
+                    <ProtectedRoute
+                        path="/techsupport"
+                        component={TechSupport}
+                    />
                     <Route path="/auth" component={AuthPages} />
                     <Route path="/contact" component={Contact} />
                     <Route path="/techsupport2" component={TechSupport2} />
@@ -61,5 +71,3 @@ export default function App() {
         </CartWrapper>
     );
 }
-
-//App.js
