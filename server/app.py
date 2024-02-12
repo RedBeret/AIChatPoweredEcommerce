@@ -763,7 +763,6 @@ def user_messages():
 
 # API Resource Routing
 # --------------------
-# These routes enable the frontend to interact with the backend efficiently,
 # supporting functionalities like user authentication, product management, and order processing.
 
 # User Authentication Endpoints
