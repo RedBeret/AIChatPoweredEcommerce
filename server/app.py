@@ -18,6 +18,8 @@ from flask import jsonify, make_response, request, session
 from flask_bcrypt import Bcrypt
 from flask_marshmallow import fields
 from flask_restful import Resource
+from pathlib import Path
+
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import Schema, ValidationError, fields, validate
 from models import (
@@ -33,6 +35,7 @@ from models import (
 from openai import OpenAI
 from sqlalchemy.exc import IntegrityError
 
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
     "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
@@ -46,6 +49,8 @@ OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 bcrypt = Bcrypt(app)
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
+script_dir = Path(__file__).parent
+file_path = script_dir / 'data' / 'support_guide.txt'
 
 @app.route("/")
 def index():
@@ -537,6 +542,17 @@ class ChatMessageSchema(ma.SQLAlchemyAutoSchema):
 
 chat_message_schema = ChatMessageSchema()
 
+def read_support_guide(file_path=file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            support_guide = file.read()
+        return support_guide
+    except FileNotFoundError:
+        print(f"The file {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred while reading the file: {e}")
+    return ""
+
 
 def get_completion(
     user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150
@@ -547,10 +563,11 @@ def get_completion(
         .limit(3)
         .all()
     )
+    support_guide = read_support_guide()
 
     messages = (
         [
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": support_guide},
         ]
         + [
             {
