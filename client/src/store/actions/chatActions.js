@@ -47,15 +47,21 @@ export const sendMessage = (messageContent) => async (dispatch) => {
 
 export const fetchMessages = () => async (dispatch) => {
     try {
-        const response = await fetch("/chat_messages", {
+        const response = await fetch("/user_messages", {
+            method: "GET",
             credentials: "include",
         });
-        if (response.ok) {
-            const data = await response.json();
-            dispatch({ type: "SET_MESSAGES", payload: data });
-        } else {
+        if (!response.ok) {
+            throw new Error(
+                `Failed to fetch messages. Status: ${response.status}`
+            );
         }
+        const data = await response.json();
+        dispatch({ type: "SET_MESSAGES", payload: data });
+        console.log("Fetched messages:", data);
+        return data;
     } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error("Error fetching messages:", error.message);
+        dispatch({ type: "FETCH_MESSAGES_ERROR", payload: error.message });
     }
 };

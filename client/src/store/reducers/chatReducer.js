@@ -38,6 +38,8 @@ const chatReducer = (state = initialState, action) => {
             return { ...state, isLoading: false, error: null };
         case SEND_MESSAGE_FAILURE:
             return { ...state, isLoading: false, error: action.payload };
+        case "CLEAR_CHAT_MESSAGES":
+            return { ...state, messages: [] };
         default:
             return state;
     }

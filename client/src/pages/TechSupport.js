@@ -5,7 +5,7 @@ import { sendMessage } from "../store/actions/chatActions";
 export default function TechSupport() {
     const [message, setMessage] = useState("");
     const dispatch = useDispatch();
-    const { messages } = useSelector((state) => state.chat);
+    const messages = useSelector((state) => state.chat.messages);
     const [textAreaRows, setTextAreaRows] = useState(1);
     const AccessibleFontStyle = {
         fontFamily: '"Open Dyslexic", sans-serif',
