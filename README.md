@@ -243,6 +243,7 @@ Before initializing the database, ensure you have a `.env` file set up in your `
     
     ```
    Replace `<Your Secret Key>` with the key you generated.
+   Replace OPENAI API KEY with the key generated on https://platform.openai.com/api-keys . 
 
 ### Installing Dependencies
 After cloning the project, install backend dependencies and activate the virtual environment:
@@ -289,7 +290,7 @@ These commands will initialize the database, perform migrations, upgrade to the 
 
 ## Contributing
 
-We welcome contributions from the community. If you wish to contribute to the project, please follow these steps:
+I welcome contributions from the community. If you wish to contribute to the project, please follow these steps:
 
 1. Fork the repository.
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`).

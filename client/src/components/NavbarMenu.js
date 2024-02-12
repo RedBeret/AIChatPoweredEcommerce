@@ -3,7 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import ShoppingCart from "./ShoppingCart";
 import { logoutUser } from "../store/actions/authActions";
 import { useHistory, Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
     Bars3Icon,
@@ -21,6 +21,7 @@ export default function NavbarMenu() {
     const [open, setOpen] = useState(false);
     const dispatch = useDispatch();
     const history = useHistory();
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
     const totalItemsInCart = cartItems.reduce(
         (total, currentItem) => total + currentItem.quantity,
         0
@@ -104,13 +105,15 @@ export default function NavbarMenu() {
                                     >
                                         Contact
                                     </Link>
-                                    <Link
-                                        to="/techsupport"
-                                        className="-m-2 block p-2 font-medium text-black"
-                                        onClick={handleCloseMenu}
-                                    >
-                                        Tech Support
-                                    </Link>
+                                    {isAuthenticated && (
+                                        <Link
+                                            to="/techsupport"
+                                            className="-m-2 block p-2 font-medium text-black"
+                                            onClick={handleCloseMenu}
+                                        >
+                                            Tech Support
+                                        </Link>
+                                    )}
                                 </div>
 
                                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
@@ -208,12 +211,14 @@ export default function NavbarMenu() {
                             >
                                 Contact
                             </Link>
-                            <Link
-                                to="/techsupport"
-                                className="flex items-center text-sm font-medium text-black hover:text-gray-300"
-                            >
-                                Tech Support
-                            </Link>
+                            {isAuthenticated && (
+                                <Link
+                                    to="/techsupport"
+                                    className="flex items-center text-sm font-medium text-black hover:text-gray-300"
+                                >
+                                    Tech Support
+                                </Link>
+                            )}
                         </div>
 
                         <div className="ml-auto flex items-center">
