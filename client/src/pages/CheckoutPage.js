@@ -74,8 +74,6 @@ const Checkout = () => {
         setError("");
         setSuccess("");
         try {
-            // let userId = user?.id;
-
             if (!isAuthenticated) {
                 console.log("Registering user...");
                 const registrationResponse = await dispatch(

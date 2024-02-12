@@ -21,6 +21,7 @@ export default function Login() {
         password: Yup.string().required("Required"),
     });
 
+    // ...
     const onSubmit = async (values, { setSubmitting }) => {
         setError("");
 
@@ -28,6 +29,9 @@ export default function Login() {
         dispatch(
             authenticateUser(username, password, setError, setSuccess, history)
         );
+        setTimeout(() => {
+            history.push("/");
+        }, 2000);
         setSubmitting(false);
     };
 
