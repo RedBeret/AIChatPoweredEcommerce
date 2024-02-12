@@ -55,6 +55,8 @@ client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 app = Flask(__name__)
 
 
+# also if you want to change the models change the content where it has you are a helpful assistant
+# to what you may want like you are a math tutor or what you want it to act like.
 def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150):
     """
     Generates a response from OpenAI based on the provided prompt.
