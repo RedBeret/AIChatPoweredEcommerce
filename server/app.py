@@ -104,7 +104,7 @@ class UserAuthResource(Resource):
         if not user_data:
             return make_response(jsonify({"error": "No input data provided"}), 400)
 
-        username = user_data.get("username")
+        username = user_data.get("username").lower()
         email = user_data.get("email")
         password = user_data.get("password")
 

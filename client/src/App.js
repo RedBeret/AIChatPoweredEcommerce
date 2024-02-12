@@ -17,9 +17,7 @@ import NavbarMenu from "./components/NavbarMenu";
 import Footer from "./components/Footer";
 import { CartWrapper } from "./components/CartContext";
 import TechSupport from "./pages/TechSupport";
-import TechSupport2 from "./pages/TechSupport2";
-import { useDispatch, useSelector } from "react-redux";
-import { checkLoginSession } from "./store/actions/authActions";
+import { useSelector } from "react-redux";
 
 const ProtectedRoute = ({ component: Component, ...rest }) => {
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -39,12 +37,6 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
 };
 
 export default function App() {
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-        dispatch(checkLoginSession());
-    }, [dispatch]);
-
     return (
         <CartWrapper>
             <Router>
@@ -64,7 +56,6 @@ export default function App() {
                     />
                     <Route path="/auth" component={AuthPages} />
                     <Route path="/contact" component={Contact} />
-                    <Route path="/techsupport2" component={TechSupport2} />
                 </Switch>
                 <Footer />
             </Router>
