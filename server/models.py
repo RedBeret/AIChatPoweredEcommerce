@@ -51,7 +51,9 @@ class UserAuth(db.Model, SerializerMixin):
     chat_messages = db.relationship(
         "ChatMessage", back_populates="user", cascade="all, delete-orphan"
     )
-
+    sessions = db.relationship(
+        "UserSession", back_populates="user", cascade="all, delete-orphan"
+    )
     orders = db.relationship("Order", back_populates="user")
 
     @validates("email")
@@ -400,6 +402,33 @@ class OrderDetail(db.Model, SerializerMixin):
         return f"<OrderDetail Order ID: {self.order_id}, Product ID: {self.product_id}, Quantity: {self.quantity}>"
 
 
+class UserSession(db.Model, SerializerMixin):
+    """
+    UserSession Model: Tracks user login sessions.
+
+    Fields:
+    - id: Primary key, auto-incremented. Used to identify the session uniquely.
+    - user_id: Foreign key linking to the UserAuth model. Identifies the user owning the session.
+    - started_at: Timestamp when the user logged in and the session was initiated.
+    - ended_at: Timestamp when the user logged out, marking the session's end. Nullable, as sessions might be ongoing.
+
+    Relations:
+    - user: Defines the relationship back to the UserAuth model, allowing easy access to the user's data from a session.
+    """
+
+    __tablename__ = "user_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.id"), nullable=False)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    ended_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship("UserAuth", back_populates="sessions")
+
+    def __repr__(self):
+        return f"<UserSession {self.id} User ID: {self.user_id}>"
+
+
 class ChatMessage(db.Model, SerializerMixin):
     """
     Captures messages exchanged between the user and the system, including both user queries and system responses.
@@ -419,6 +448,8 @@ class ChatMessage(db.Model, SerializerMixin):
     message = db.Column(db.Text, nullable=False)
     response = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey("user_sessions.id"), nullable=True)
+    session = db.relationship("UserSession", backref="chat_messages")
 
     user = db.relationship("UserAuth", back_populates="chat_messages")
 

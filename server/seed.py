@@ -21,6 +21,7 @@ from models import (
     ProductColor,
     ShippingInfo,
     UserAuth,
+    UserSession,
 )
 
 # Instantiate Faker
@@ -48,6 +49,20 @@ def seed_database():
             db.session.add(user)
             db.session.flush()  # Flush to assign an ID to the user object
             user_ids.append(user.id)
+
+        db.session.commit()
+
+        for user_id in user_ids:
+            user_session = UserSession(
+                user_id=user_id,
+                started_at=fake.date_time_between(start_date="-1y", end_date="now"),
+                ended_at=(
+                    fake.date_time_between(start_date="-1y", end_date="now")
+                    if random.choice([True, False])
+                    else None
+                ),
+            )
+            db.session.add(user_session)
 
         db.session.commit()
 
