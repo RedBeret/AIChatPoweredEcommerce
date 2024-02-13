@@ -7,6 +7,8 @@ product management, shipping information, and chat functionality.
 import openai
 from click import prompt
 from dotenv import load_dotenv
+from flask_migrate import current
+from pydantic import conset
 
 load_dotenv()
 import logging
@@ -17,6 +19,7 @@ from openai import OpenAI
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 from config import api, app, db, ma, openai_client
@@ -34,6 +37,7 @@ from models import (
     Product,
     ShippingInfo,
     UserAuth,
+    UserSession,
     db,
 )
 from openai import OpenAI
@@ -132,9 +136,16 @@ class UserAuthResource(Resource):
         db.session.add(new_user)
         db.session.commit()
 
+        new_user_session = UserSession(
+            user_id=new_user.id, started_at=datetime.utcnow()
+        )
+        db.session.add(new_user_session)
+        db.session.commit()
+
         session["user_id"] = new_user.id
         session["username"] = new_user.username
         session["logged_in"] = True
+        session["session_id"] = new_user_session.id
 
         return make_response(
             jsonify(
@@ -143,6 +154,7 @@ class UserAuthResource(Resource):
                     "id": new_user.id,
                     "username": new_user.username,
                     "email": new_user.email,
+                    "session_id": new_user_session.id,
                 }
             ),
             201,
@@ -203,21 +215,29 @@ class UserLoginResource(Resource):
                 jsonify({"error": "Username and password are required"}), 400
             )
 
-        user = UserAuth.query.filter_by(username=data["username"]).first()
-
-        # Initialize bcrypt
-        bcrypt = Bcrypt()
-
-        if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
+        user = UserAuth.query.filter_by(username=data["username"].lower()).first()
+        if user and user.check_password(
+            data["password"]
+        ):  # Utilize the check_password method of the UserAuth model
             session["user_id"] = user.id
             session["username"] = user.username
             session["logged_in"] = True
+
+            # Create a new UserSession instance
+            new_user_session = UserSession(
+                user_id=user.id, started_at=datetime.utcnow()
+            )
+            db.session.add(new_user_session)
+            db.session.commit()
+
+            session["session_id"] = new_user_session.id
 
             response_data = {
                 "message": "Login successful",
                 "user_id": user.id,
                 "username": user.username,
                 "email": user.email,
+                "session_id": new_user_session.id,
             }
 
             return make_response(jsonify(response_data), 200)
@@ -235,10 +255,22 @@ class UserLogoutResource(Resource):
     def post(self):
         """
         Handles the logout process for users.
-        Clears the Flask session to remove any stored user information and
-        instructs the browser to clear the session cookie.
+        Before clearing the Flask session, it marks the user's current session as ended.
         """
+        user_id = session.get("user_id")
+
+        if user_id:
+            current_session = (
+                UserSession.query.filter_by(user_id=user_id, ended_at=None)
+                .order_by(UserSession.started_at.desc())
+                .first()
+            )
+            if current_session:
+                current_session.ended_at = datetime.utcnow()
+                db.session.commit()
+
         session.clear()
+
         response = make_response(jsonify({"message": "Logout successful"}), 200)
         response.set_cookie("session", "", expires=0)
         return response
@@ -663,7 +695,7 @@ def read_support_guide(file_path=file_path):
 
 
 def get_completion(
-    user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150
+    user_id, user_message, model="gpt-4", temperature=0.7, max_tokens=500
 ):
     """
     Fetches AI-generated responses based on the user's message and preceding chat context.
@@ -720,6 +752,13 @@ def chat():
     if not user_id:
         return jsonify({"error": "You must be signed in to send messages."}), 403
 
+    current_session = (
+        UserSession.query.filter_by(user_id=user_id, ended_at=None)
+        .order_by(UserSession.started_at.desc())
+        .first()
+    )
+    session_id = current_session.id if current_session else None
+
     data = request.json
     user_message = data.get("message")
     if not user_message:
@@ -730,6 +769,7 @@ def chat():
     if ai_response:
         new_chat_message = ChatMessage(
             user_id=user_id,
+            session_id=session_id,
             message=user_message,
             response=ai_response,
         )
@@ -743,22 +783,49 @@ def chat():
         return jsonify({"error": "Failed to get response from AI"}), 500
 
 
-@app.route("/user_messages", methods=["GET"])
-def user_messages():
-    """
-    Endpoint for retrieving a user's chat history, providing a comprehensive view of their interactions.
-    """
+@app.route("/continue_last_conversation", methods=["GET"])
+def continue_last_conversation():
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "User not logged in."}), 401
+    print("user_id", user_id)
 
-    user_messages = (
-        ChatMessage.query.filter_by(user_id=user_id)
+    last_session_id = (
+        db.session.query(ChatMessage.session_id)
+        .filter(ChatMessage.user_id == user_id)
+        .order_by(ChatMessage.timestamp.desc())
+        .first()
+    )
+
+    if not last_session_id:
+        return jsonify({"error": "No previous session found."}), 404
+
+    last_session_id = last_session_id[0]
+    last_session = UserSession.query.get(last_session_id)
+
+    if not last_session:
+        return jsonify({"error": "No previous session found."}), 404
+
+    print("last_session", last_session)
+    print("last_session.id", last_session.id)
+
+    chat_messages = (
+        ChatMessage.query.filter_by(session_id=last_session_id)
         .order_by(ChatMessage.timestamp.asc())
         .all()
     )
-    messages = chat_message_schema.dump(user_messages, many=True)
-    return jsonify(messages), 200
+    print("chat_messages", chat_messages)
+
+    if not chat_messages:
+        return jsonify({"message": "No messages found in the last session."}), 200
+
+    messages = []
+    for chat_message in chat_messages:
+        user_message = {"sender": "user", "text": chat_message.message}
+        ai_response = {"sender": "bot", "text": chat_message.response}
+        messages.extend([user_message, ai_response])
+
+    return jsonify({"session_id": last_session.id, "messages": messages}), 200
 
 
 # API Resource Routing

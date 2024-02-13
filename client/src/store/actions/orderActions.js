@@ -1,9 +1,7 @@
-// Order Action Types
 export const CREATE_ORDER_START = "CREATE_ORDER_START";
 export const CREATE_ORDER_SUCCESS = "CREATE_ORDER_SUCCESS";
 export const CREATE_ORDER_FAIL = "CREATE_ORDER_FAIL";
 
-// Action Creators for creating an order
 export const createOrderStart = () => ({
     type: CREATE_ORDER_START,
 });

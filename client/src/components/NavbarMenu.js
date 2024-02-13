@@ -117,40 +117,56 @@ export default function NavbarMenu() {
                                 </div>
 
                                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-                                    <div className="flow-root">
-                                        <div className="flow-root">
-                                            <Link
-                                                to="/auth/login"
-                                                className="-m-2 block p-2 font-medium text-black"
-                                            >
-                                                Sign in
-                                            </Link>
-                                        </div>
-                                        <div className="flow-root">
-                                            <Link
-                                                to="/auth/register"
-                                                className="-m-2 block p-2 font-medium text-black"
-                                            >
-                                                Create account
-                                            </Link>
-                                        </div>
-                                        <div className="flow-root">
-                                            <Link
-                                                to="/auth/updatepassword"
-                                                className="-m-2 block p-2 font-medium text-black"
-                                            >
-                                                Change Password
-                                            </Link>
-                                        </div>
-                                        <div className="flow-root">
-                                            <Link
-                                                to="/auth/closeaccount"
-                                                className="-m-2 block p-2 font-medium text-black"
-                                            >
-                                                Delete Account
-                                            </Link>
-                                        </div>
-                                    </div>
+                                    {isAuthenticated ? (
+                                        <>
+                                            {/* Show only to authenticated users */}
+                                            <div className="flow-root">
+                                                <a
+                                                    href="#"
+                                                    onClick={handleLogout}
+                                                    className="-m-2 block p-2 font-medium text-black"
+                                                >
+                                                    Log Out
+                                                </a>
+                                            </div>
+                                            <div className="flow-root">
+                                                <Link
+                                                    to="/auth/updatepassword"
+                                                    className="-m-2 block p-2 font-medium text-black"
+                                                >
+                                                    Change Password
+                                                </Link>
+                                            </div>
+                                            <div className="flow-root">
+                                                <Link
+                                                    to="/auth/closeaccount"
+                                                    className="-m-2 block p-2 font-medium text-black"
+                                                >
+                                                    Delete Account
+                                                </Link>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* Show only to unauthenticated users */}
+                                            <div className="flow-root">
+                                                <Link
+                                                    to="/auth/login"
+                                                    className="-m-2 block p-2 font-medium text-black"
+                                                >
+                                                    Sign in
+                                                </Link>
+                                            </div>
+                                            <div className="flow-root">
+                                                <Link
+                                                    to="/auth/register"
+                                                    className="-m-2 block p-2 font-medium text-black"
+                                                >
+                                                    Create account
+                                                </Link>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>
@@ -179,7 +195,7 @@ export default function NavbarMenu() {
                         {/* Logo */}
                         <div className="ml-4 flex lg:ml-0">
                             <span className="sr-only">
-                                VisionX Phone Company
+                                VisionX Phone (not a real company)
                             </span>
                             <img
                                 className="h-8 w-auto"
@@ -187,7 +203,7 @@ export default function NavbarMenu() {
                                 alt="VisionX Phone Company logo"
                             />
                             <span className="text-md sm:text-xl font-semibold">
-                                VisionX Phone Company
+                                VisionX Phone (Fake Company)
                             </span>
                         </div>
 
@@ -224,28 +240,41 @@ export default function NavbarMenu() {
                         <div className="ml-auto flex items-center">
                             {/* Sign in and Create account links */}
                             <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                                <Link
-                                    to="/auth/login"
-                                    className="text-sm font-medium text-black hover:text-gray-300"
-                                >
-                                    Sign in
-                                </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="text-sm font-medium text-black hover:text-gray-300 cursor-pointer"
-                                >
-                                    Log Out
-                                </button>
-                                <span
-                                    className="h-6 w-px bg-gray-600"
-                                    aria-hidden="true"
-                                />
-                                <Link
-                                    to="/auth/register"
-                                    className="text-sm font-medium text-black hover:text-gray-300"
-                                >
-                                    Create account
-                                </Link>
+                                {isAuthenticated ? (
+                                    <>
+                                        {/* Only show the Log Out button if the user is authenticated */}
+                                        <button
+                                            onClick={handleLogout}
+                                            className="text-sm font-medium text-black hover:text-gray-300 cursor-pointer"
+                                        >
+                                            Log Out
+                                        </button>
+                                        <span
+                                            className="h-6 w-px bg-gray-600"
+                                            aria-hidden="true"
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Show Sign in and Create account links if the user is not authenticated */}
+                                        <Link
+                                            to="/auth/login"
+                                            className="text-sm font-medium text-black hover:text-gray-300"
+                                        >
+                                            Sign in
+                                        </Link>
+                                        <span
+                                            className="h-6 w-px bg-gray-600"
+                                            aria-hidden="true"
+                                        />
+                                        <Link
+                                            to="/auth/register"
+                                            className="text-sm font-medium text-black hover:text-gray-300"
+                                        >
+                                            Create account
+                                        </Link>
+                                    </>
+                                )}
                             </div>
 
                             {/* Search - !! might remove*/}

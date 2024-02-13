@@ -1,9 +1,6 @@
-// Shipping Action Types
 export const CREATE_SHIPPING_INFO_START = "CREATE_SHIPPING_INFO_START";
 export const CREATE_SHIPPING_INFO_SUCCESS = "CREATE_SHIPPING_INFO_SUCCESS";
 export const CREATE_SHIPPING_INFO_FAIL = "CREATE_SHIPPING_INFO_FAIL";
-
-// Action Creators for Shipping Info
 
 export const createShippingInfoStart = () => ({
     type: CREATE_SHIPPING_INFO_START,

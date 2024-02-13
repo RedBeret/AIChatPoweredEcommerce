@@ -1,15 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
-import { sendMessage } from "../store/actions/chatActions";
+import { sendMessage, fetchMessages } from "../store/actions/chatActions";
 
 export default function TechSupport() {
     const [message, setMessage] = useState("");
     const dispatch = useDispatch();
-    const { messages } = useSelector((state) => state.chat);
+    const messages = useSelector((state) => state.chat.messages);
     const [textAreaRows, setTextAreaRows] = useState(1);
     const AccessibleFontStyle = {
         fontFamily: '"Open Dyslexic", sans-serif',
     };
+
+    const handleContinueLastChat = () => {
+        dispatch(fetchMessages());
+        console.log("Fetching messages...");
+        console.log("Current chat messages on Tech:", messages);
+    };
+
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (!message.trim()) return;
@@ -42,6 +50,7 @@ export default function TechSupport() {
             );
         }
     };
+
     const handleTextAreaChange = (e) => {
         setMessage(e.target.value);
         const numberOfRows = e.target.value.split("\n").length;
@@ -61,9 +70,10 @@ export default function TechSupport() {
                             Chat with VisionX AI
                         </h2>
                         <div className="mt-4 p-4 bg-gray-100 rounded-lg max-h-[calc(100vh-16rem)] overflow-y-auto">
-                            {messages.map((msg, index) =>
-                                renderMessage(msg, index)
-                            )}
+                            {messages &&
+                                messages.map((msg, index) =>
+                                    renderMessage(msg, index)
+                                )}
                         </div>
                     </div>
                 </div>
@@ -90,6 +100,15 @@ export default function TechSupport() {
                             Send
                         </button>
                     </form>
+                </div>
+                {/* Action Buttons */}
+                <div className="p-4 flex justify-around bg-white">
+                    <button
+                        onClick={handleContinueLastChat}
+                        className="bg-yellow-500 text-white rounded-md p-2"
+                    >
+                        Continue Last Conversation
+                    </button>
                 </div>
             </div>
         </div>

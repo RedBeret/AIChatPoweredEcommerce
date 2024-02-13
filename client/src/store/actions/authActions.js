@@ -1,6 +1,7 @@
 //authActions.js
 export const authenticateUser =
-    (username, password, setError, setSuccess, history) => async (dispatch) => {
+    (username, password, setError, setSuccess, history) =>
+    async (dispatch, getState) => {
         dispatch({ type: "AUTH_START" });
         try {
             const response = await fetch("/login", {
@@ -13,8 +14,8 @@ export const authenticateUser =
                 const errorData = await response.json();
                 throw errorData.message || "Authentication failed";
             }
-
             const data = await response.json();
+
             dispatch({
                 type: "AUTH_SUCCESS",
                 payload: {
@@ -23,6 +24,10 @@ export const authenticateUser =
             });
 
             setSuccess("Login successful");
+            const { chat } = getState();
+            if (chat.messages.length === 0) {
+            } else {
+            }
         } catch (error) {
             console.error("Error during login:", error);
             dispatch({ type: "AUTH_FAIL" });
@@ -79,7 +84,6 @@ export const registerUser =
             dispatch({ type: "AUTH_SUCCESS", payload: data });
             setSuccess("Signup successful!");
             return { payload: { user: data.user } };
-            // setTimeout(() => history.push("/"), 1000);
         } catch (error) {
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });
@@ -157,9 +161,8 @@ export const logoutUser = (history) => async (dispatch) => {
         if (response.ok) {
             dispatch({ type: "AUTH_LOGOUT" });
             dispatch({ type: "CLEAR_USER_DATA" });
-
+            dispatch({ type: "CLEAR_CHAT_MESSAGES" });
             localStorage.removeItem("token");
-
             history.push("/auth/login");
         } else {
             console.error("Logout failed:", response.statusText);
