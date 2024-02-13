@@ -695,7 +695,7 @@ def read_support_guide(file_path=file_path):
 
 
 def get_completion(
-    user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=500
+    user_id, user_message, model="gpt-4", temperature=0.7, max_tokens=500
 ):
     """
     Fetches AI-generated responses based on the user's message and preceding chat context.
@@ -783,24 +783,6 @@ def chat():
         return jsonify({"error": "Failed to get response from AI"}), 500
 
 
-# @app.route("/user_messages", methods=["GET"])
-# def user_messages():
-#     """
-#     Endpoint for retrieving a user's chat history, providing a comprehensive view of their interactions.
-#     """
-#     user_id = session.get("user_id")
-#     if not user_id:
-#         return jsonify({"error": "User not logged in."}), 401
-
-#     user_messages = (
-#         ChatMessage.query.filter_by(user_id=user_id)
-#         .order_by(ChatMessage.timestamp.asc())
-#         .all()
-#     )
-#     messages = chat_message_schema.dump(user_messages, many=True)
-#     return jsonify(messages), 200
-
-
 @app.route("/continue_last_conversation", methods=["GET"])
 def continue_last_conversation():
     user_id = session.get("user_id")
@@ -862,12 +844,6 @@ api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
 api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
 # Order Management Endpoints
 api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
-# Session Management Endpoint
-api.add_resource(SessionCheckResource, "/check_session")
-
-
-if __name__ == "__main__":
-    app.run(port=5555, debug=True)
 # Session Management Endpoint
 api.add_resource(SessionCheckResource, "/check_session")
 

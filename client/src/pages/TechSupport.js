@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
-import {
-    sendMessage,
-    // startNewChatSession,
-    fetchMessages,
-} from "../store/actions/chatActions";
+import { sendMessage, fetchMessages } from "../store/actions/chatActions";
 
 export default function TechSupport() {
     const [message, setMessage] = useState("");
@@ -16,19 +12,11 @@ export default function TechSupport() {
         fontFamily: '"Open Dyslexic", sans-serif',
     };
 
-    // useEffect(() => {
-    //     dispatch(fetchMessages());
-    // }, [dispatch]);
-
     const handleContinueLastChat = () => {
         dispatch(fetchMessages());
         console.log("Fetching messages...");
         console.log("Current chat messages on Tech:", messages);
     };
-
-    // const handleStartNewChat = () => {
-    //     dispatch(startNewChatSession());
-    // };
 
     const handleSendMessage = (e) => {
         e.preventDefault();
@@ -62,30 +50,6 @@ export default function TechSupport() {
             );
         }
     };
-    // const renderLastMessages = (msg, index) => {
-    //     if (msg.sender === "user") {
-    //         return (
-    //             <div key={msg.id} className="flex items-center my-2">
-    //                 <span className="text-lg">🙋‍♂️</span>
-    //                 <div className="ml-2 p-2 bg-blue-200 rounded-lg">
-    //                     {msg.text}
-    //                 </div>
-    //             </div>
-    //         );
-    //     } else {
-    //         return (
-    //             <div
-    //                 key={msg.id}
-    //                 className="flex items-center justify-end my-2"
-    //             >
-    //                 <div className="mr-2 p-2 bg-green-200 rounded-lg">
-    //                     {msg.text}
-    //                 </div>
-    //                 <span className="text-lg">🤖</span>
-    //             </div>
-    //         );
-    //     }
-    // };
 
     const handleTextAreaChange = (e) => {
         setMessage(e.target.value);
@@ -137,15 +101,8 @@ export default function TechSupport() {
                         </button>
                     </form>
                 </div>
-                {/* Buttons for Starting New Chat and Continuing Last Conversation */}
                 {/* Action Buttons */}
                 <div className="p-4 flex justify-around bg-white">
-                    {/* <button
-                        onClick={handleStartNewChat}
-                        className="bg-green-500 text-white rounded-md p-2"
-                    >
-                        Start New Chat
-                    </button> */}
                     <button
                         onClick={handleContinueLastChat}
                         className="bg-yellow-500 text-white rounded-md p-2"

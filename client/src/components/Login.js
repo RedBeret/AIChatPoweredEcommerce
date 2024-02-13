@@ -21,14 +21,19 @@ export default function Login() {
         password: Yup.string().required("Required"),
     });
 
-    // ...
-    const onSubmit = async (values, { setSubmitting }) => {
+    const onSubmit = async (values, { setSubmitting, resetForm }) => {
         setError("");
 
         const { username, password } = values;
         dispatch(
             authenticateUser(username, password, setError, setSuccess, history)
         );
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        if (success) {
+            resetForm();
+        }
 
         setSubmitting(false);
     };

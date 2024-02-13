@@ -1,4 +1,3 @@
-// import { fetchMessages } from "./chatActions";
 //authActions.js
 export const authenticateUser =
     (username, password, setError, setSuccess, history) =>
@@ -26,12 +25,8 @@ export const authenticateUser =
 
             setSuccess("Login successful");
             const { chat } = getState();
-            console.log("Current chat messages:", chat.messages);
             if (chat.messages.length === 0) {
-                console.log("Fetching messages...");
-                // dispatch(fetchMessages());
             } else {
-                console.log("Chat messages already fetched.");
             }
         } catch (error) {
             console.error("Error during login:", error);
@@ -89,7 +84,6 @@ export const registerUser =
             dispatch({ type: "AUTH_SUCCESS", payload: data });
             setSuccess("Signup successful!");
             return { payload: { user: data.user } };
-            // setTimeout(() => history.push("/"), 1000);
         } catch (error) {
             console.error("Error during signup:", error);
             dispatch({ type: "AUTH_FAIL", payload: error.message });

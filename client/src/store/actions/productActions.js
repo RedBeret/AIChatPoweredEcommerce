@@ -36,7 +36,6 @@ export const fetchProducts = () => async (dispatch) => {
     }
 };
 
-// Fetch a single product
 export const fetchProductStart = () => ({
     type: FETCH_PRODUCT_START,
 });

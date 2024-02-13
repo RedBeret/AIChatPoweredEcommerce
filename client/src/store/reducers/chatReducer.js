@@ -4,14 +4,11 @@ import {
     SEND_MESSAGE_FAILURE,
     ADD_USER_MESSAGE,
     ADD_AI_RESPONSE,
-    // START_NEW_CHAT_SESSION,
     SET_MESSAGES,
     FETCH_LAST_SESSION_MESSAGES_START,
     FETCH_LAST_SESSION_MESSAGES_SUCCESS,
     FETCH_LAST_SESSION_MESSAGES_FAILURE,
 } from "../actions/chatActions";
-
-// Your reducer logic...
 
 const initialState = {
     messages: [],
@@ -46,8 +43,6 @@ const chatReducer = (state = initialState, action) => {
                 isLoading: false,
             };
 
-        // case START_NEW_CHAT_SESSION:
-        //     return { ...initialState };
         case SET_MESSAGES:
             return {
                 ...state,

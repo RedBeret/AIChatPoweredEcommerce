@@ -3,7 +3,6 @@ export const SEND_MESSAGE_SUCCESS = "SEND_MESSAGE_SUCCESS";
 export const SEND_MESSAGE_FAILURE = "SEND_MESSAGE_FAILURE";
 export const ADD_USER_MESSAGE = "ADD_USER_MESSAGE";
 export const ADD_AI_RESPONSE = "ADD_AI_RESPONSE";
-// export const START_NEW_CHAT_SESSION = "START_NEW_CHAT_SESSION";
 export const CONTINUE_LAST_CHAT_SESSION = "CONTINUE_LAST_CHAT_SESSION";
 export const SET_MESSAGES = "SET_MESSAGES";
 export const FETCH_MESSAGES_ERROR = "FETCH_MESSAGES_ERROR";
@@ -92,38 +91,6 @@ export const fetchMessages = () => async (dispatch) => {
     }
 };
 
-// export const startNewChatSession = () => {
-//     return {
-//         type: START_NEW_CHAT_SESSION,
-//     };
-// };
-
 export const continueLastChatSession = () => async (dispatch) => {
     dispatch(fetchMessages());
 };
-
-// export const fetchLastSessionMessages = () => async (dispatch) => {
-//     dispatch({ type: FETCH_LAST_SESSION_MESSAGES_START });
-//     try {
-//         const response = await fetch("/continue_last_conversation", {
-//             method: "GET",
-//             credentials: "include",
-//         });
-//         if (!response.ok) {
-//             throw new Error(
-//                 `Failed to fetch last session messages. Status: ${response.status}`
-//             );
-//         }
-//         const data = await response.json();
-//         dispatch({
-//             type: FETCH_LAST_SESSION_MESSAGES_SUCCESS,
-//             payload: data.messages, // Assuming the response contains an array of messages
-//         });
-//     } catch (error) {
-//         dispatch({
-//             type: FETCH_LAST_SESSION_MESSAGES_FAILURE,
-//             payload: error.message || "An unexpected error occurred.",
-//         });
-//         console.error("Error fetching last session messages:", error.message);
-//     }
-// };
