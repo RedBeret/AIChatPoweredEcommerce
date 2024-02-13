@@ -4,7 +4,14 @@ import {
     SEND_MESSAGE_FAILURE,
     ADD_USER_MESSAGE,
     ADD_AI_RESPONSE,
+    // START_NEW_CHAT_SESSION,
+    SET_MESSAGES,
+    FETCH_LAST_SESSION_MESSAGES_START,
+    FETCH_LAST_SESSION_MESSAGES_SUCCESS,
+    FETCH_LAST_SESSION_MESSAGES_FAILURE,
 } from "../actions/chatActions";
+
+// Your reducer logic...
 
 const initialState = {
     messages: [],
@@ -16,6 +23,10 @@ const chatReducer = (state = initialState, action) => {
     switch (action.type) {
         case SEND_MESSAGE_START:
             return { ...state, isLoading: true, error: null };
+        case SEND_MESSAGE_SUCCESS:
+            return { ...state, isLoading: false, error: null };
+        case SEND_MESSAGE_FAILURE:
+            return { ...state, isLoading: false, error: action.payload };
         case ADD_USER_MESSAGE:
             const userMessage = {
                 id: state.messages.length + 1,
@@ -34,9 +45,21 @@ const chatReducer = (state = initialState, action) => {
                 messages: [...state.messages, aiResponse],
                 isLoading: false,
             };
-        case SEND_MESSAGE_SUCCESS:
-            return { ...state, isLoading: false, error: null };
-        case SEND_MESSAGE_FAILURE:
+
+        // case START_NEW_CHAT_SESSION:
+        //     return { ...initialState };
+        case SET_MESSAGES:
+            return {
+                ...state,
+                messages: action.payload || [],
+                isLoading: false,
+            };
+
+        case FETCH_LAST_SESSION_MESSAGES_START:
+            return { ...state, isLoading: true, error: null };
+        case FETCH_LAST_SESSION_MESSAGES_SUCCESS:
+            return { ...state, messages: action.payload, isLoading: false };
+        case FETCH_LAST_SESSION_MESSAGES_FAILURE:
             return { ...state, isLoading: false, error: action.payload };
         case "CLEAR_CHAT_MESSAGES":
             return { ...state, messages: [] };

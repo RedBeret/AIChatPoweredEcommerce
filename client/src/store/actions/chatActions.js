@@ -3,6 +3,16 @@ export const SEND_MESSAGE_SUCCESS = "SEND_MESSAGE_SUCCESS";
 export const SEND_MESSAGE_FAILURE = "SEND_MESSAGE_FAILURE";
 export const ADD_USER_MESSAGE = "ADD_USER_MESSAGE";
 export const ADD_AI_RESPONSE = "ADD_AI_RESPONSE";
+// export const START_NEW_CHAT_SESSION = "START_NEW_CHAT_SESSION";
+export const CONTINUE_LAST_CHAT_SESSION = "CONTINUE_LAST_CHAT_SESSION";
+export const SET_MESSAGES = "SET_MESSAGES";
+export const FETCH_MESSAGES_ERROR = "FETCH_MESSAGES_ERROR";
+export const FETCH_LAST_SESSION_MESSAGES_START =
+    "FETCH_LAST_SESSION_MESSAGES_START";
+export const FETCH_LAST_SESSION_MESSAGES_SUCCESS =
+    "FETCH_LAST_SESSION_MESSAGES_SUCCESS";
+export const FETCH_LAST_SESSION_MESSAGES_FAILURE =
+    "FETCH_LAST_SESSION_MESSAGES_FAILURE";
 
 export const sendMessage = (messageContent) => async (dispatch) => {
     dispatch({ type: SEND_MESSAGE_START });
@@ -46,22 +56,74 @@ export const sendMessage = (messageContent) => async (dispatch) => {
 };
 
 export const fetchMessages = () => async (dispatch) => {
+    dispatch({ type: FETCH_LAST_SESSION_MESSAGES_START });
+    console.log("Fetching messages...");
     try {
-        const response = await fetch("/user_messages", {
+        const response = await fetch("/continue_last_conversation", {
             method: "GET",
             credentials: "include",
         });
+        console.log("Response received:", response);
         if (!response.ok) {
-            throw new Error(
-                `Failed to fetch messages. Status: ${response.status}`
-            );
+            throw new Error("Failed to fetch messages");
         }
         const data = await response.json();
-        dispatch({ type: "SET_MESSAGES", payload: data });
-        console.log("Fetched messages:", data);
-        return data;
+        console.log("Data received:", data);
+
+        const messages = data.messages.map((msg, index) => ({
+            id: index,
+            sender: msg.sender,
+            text: msg.text,
+        }));
+        console.log("Messages extracted:", messages);
+
+        dispatch({
+            type: SET_MESSAGES,
+            payload: messages,
+        });
+        console.log("Messages dispatched to store");
+        console.log("Current chat messages on Tech:", messages);
     } catch (error) {
-        console.error("Error fetching messages:", error.message);
-        dispatch({ type: "FETCH_MESSAGES_ERROR", payload: error.message });
+        console.error("Fetch error:", error);
+        dispatch({
+            type: FETCH_LAST_SESSION_MESSAGES_FAILURE,
+            payload: error.toString(),
+        });
     }
 };
+
+// export const startNewChatSession = () => {
+//     return {
+//         type: START_NEW_CHAT_SESSION,
+//     };
+// };
+
+export const continueLastChatSession = () => async (dispatch) => {
+    dispatch(fetchMessages());
+};
+
+// export const fetchLastSessionMessages = () => async (dispatch) => {
+//     dispatch({ type: FETCH_LAST_SESSION_MESSAGES_START });
+//     try {
+//         const response = await fetch("/continue_last_conversation", {
+//             method: "GET",
+//             credentials: "include",
+//         });
+//         if (!response.ok) {
+//             throw new Error(
+//                 `Failed to fetch last session messages. Status: ${response.status}`
+//             );
+//         }
+//         const data = await response.json();
+//         dispatch({
+//             type: FETCH_LAST_SESSION_MESSAGES_SUCCESS,
+//             payload: data.messages, // Assuming the response contains an array of messages
+//         });
+//     } catch (error) {
+//         dispatch({
+//             type: FETCH_LAST_SESSION_MESSAGES_FAILURE,
+//             payload: error.message || "An unexpected error occurred.",
+//         });
+//         console.error("Error fetching last session messages:", error.message);
+//     }
+// };

@@ -29,9 +29,7 @@ export default function Login() {
         dispatch(
             authenticateUser(username, password, setError, setSuccess, history)
         );
-        setTimeout(() => {
-            history.push("/");
-        }, 2000);
+
         setSubmitting(false);
     };
 

@@ -1,4 +1,4 @@
-import { fetchMessages } from "./chatActions";
+// import { fetchMessages } from "./chatActions";
 //authActions.js
 export const authenticateUser =
     (username, password, setError, setSuccess, history) =>
@@ -15,8 +15,8 @@ export const authenticateUser =
                 const errorData = await response.json();
                 throw errorData.message || "Authentication failed";
             }
-
             const data = await response.json();
+
             dispatch({
                 type: "AUTH_SUCCESS",
                 payload: {
@@ -29,7 +29,7 @@ export const authenticateUser =
             console.log("Current chat messages:", chat.messages);
             if (chat.messages.length === 0) {
                 console.log("Fetching messages...");
-                dispatch(fetchMessages());
+                // dispatch(fetchMessages());
             } else {
                 console.log("Chat messages already fetched.");
             }
