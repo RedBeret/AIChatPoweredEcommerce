@@ -1,7 +1,5 @@
 # AiChatPoweredEcommerce
 
-# Project Introduction
-
 ## Overview of AiChatPoweredEcommerce
 
 Welcome to AiChatPoweredEcommerce, a revolutionary e-commerce platform designed to transform the online shopping experience through the power of artificial intelligence. Note that I am early in my software engineer career coming out of a bootcamp so there will be areas you can find to improve. With that, I have learned so much as well as integrated some AI for some next generation tech. Lets continue, as in an era where convenience, speed, and personalization are not just valued but expected, this platform stands out by offering an unparalleled user experience, seamlessly integrating cutting-edge AI technology with a sleek, user-friendly interface.
