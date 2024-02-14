@@ -72,10 +72,8 @@ file_path = script_dir / "data" / "support_guide.txt"
 def serve(path):
     if path != "" and os.path.exists(app.static_folder + "/" + path):
         return send_from_directory(app.static_folder, path)
-    elif path.startswith("static/"):
-        return send_from_directory("./static", path[len("static/") :])
     else:
-        return render_template("index.html")
+        return send_from_directory(app.static_folder, "index.html")
 
 
 # User Authentication Resources
