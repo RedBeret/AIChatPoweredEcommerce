@@ -67,13 +67,14 @@ script_dir = Path(__file__).parent
 file_path = script_dir / "data" / "support_guide.txt"
 
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def catch_all(path):
-    if path != "" and os.path.exists(app.static_folder + "/" + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, "index.html")
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("index.html")
 
 
 # User Authentication Resources
