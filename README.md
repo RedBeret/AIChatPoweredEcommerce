@@ -10,6 +10,8 @@ This project goes beyond AI, embodying my commitment to sustainability and a des
 
 I've also included an ai.py script in the offline-dev-env branch, inviting anyone curious about AI or looking to build their chatbot to dive in. This isn't just an e-commerce platform; it's a vision of the future where AI enhances every aspect of online retail. I encourage you to explore the code, share your findings, and join me on this journey of innovation. 
 
+![Collage of AIChatPoweredSite](/client/src/assets/img/chatecommercewebsiteimage.png)
+
 ## Technical Overview
 
 This platform, AiChatPoweredEcommerce, is engineered using a blend of modern frontend and backend technologies, along with advanced AI integrations, to deliver a seamless and secure online shopping experience. Here's a closer look at the technological backbone of this e-commerce solution:
@@ -18,7 +20,7 @@ This platform, AiChatPoweredEcommerce, is engineered using a blend of modern fro
     - **Frontend Technologies**: At the heart of our user interface is React, a powerful JavaScript library that enables us to build a dynamic and responsive frontend. Complemented by Tailwind CSS, we achieve an elegant and adaptive design that ensures our platform is accessible across all devices and screen sizes. This combination allows for rapid development and a high degree of customization, enhancing the overall user experience with interactive and visually appealing interfaces.
     - **Backend Technologies**: Flask, a lightweight WSGI web application framework, serves as our backend cornerstone. It provides us with the flexibility and tools necessary to create robust API endpoints, manage database operations, and handle user authentication and sessions securely. Flask's simplicity and extensibility make it an ideal choice for our scalable e-commerce platform, supporting everything from product listings to order management. It utilizes python to interact with our server models.
     - **AI Integration and Chat Support**: Leveraging the capabilities of Voiceflow and OpenAI's ChatGPT, we offer an AI-powered chat support system that stands out for its ability to understand and respond to customer inquiries in real-time. This integration not only enhances customer service by providing instant support and recommendations but also personalizes the shopping experience based on user interactions and preferences. The AI chatbot is trained on a diverse dataset, enabling it to handle a wide range of queries with remarkable accuracy.
-    - **Database and Security**: SQLite, known for its reliability and ease of use, is our chosen database management system. It efficiently handles our data storage needs, from user profiles to product catalogs. On the security front, we employ bcrypt for hashing passwords, ensuring that user credentials are stored securely. Sessions and cookies are meticulously managed to maintain user state and provide a secure, personalized shopping experience. Together, these measures fortify our platform against common security threats, safeguarding user data and transactions.
+    - **Database and Security**: SQLite, known for its reliability and ease of use, is our chosen database management system in Dev while PostgreSQL. It efficiently handles our data storage needs, from user profiles to product catalogs. On the security front, we employ bcrypt for hashing passwords, ensuring that user credentials are stored securely. Sessions and cookies are meticulously managed to maintain user state and provide a secure, personalized shopping experience. Together, these measures fortify our platform against common security threats, safeguarding user data and transactions.
 
 This technical foundation enables AiChatPoweredEcommerce to offer a unique and secure online shopping environment, where users can enjoy a seamless interaction with AI-driven support, backed by robust technologies.
 
@@ -148,7 +150,7 @@ These lessons, learned through trials, errors, and successes, have not only cont
 
 ## Platform Setup Guide
 
-Welcome to the AiChatPoweredEcommerce Platform. This guide will walk you through the steps to set up your development environment for both the backend (Flask) and frontend (React) components of the application.
+Welcome to the AiChatPoweredEcommerce Platform. This guide will walk you through the steps to clone and set up your development environment for both the backend (Flask) and frontend (React) components of the application. Be sure to use the offline-dev-env branch and not the main. As the main was reconfigured for Production Deployment.
 
 ## Directory Structure
 
