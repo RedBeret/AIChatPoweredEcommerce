@@ -795,7 +795,7 @@ def continue_last_conversation():
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "User not logged in."}), 401
-    print("user_id", user_id)
+    # print("user_id", user_id)
 
     last_session_id = (
         db.session.query(ChatMessage.session_id)
@@ -813,15 +813,15 @@ def continue_last_conversation():
     if not last_session:
         return jsonify({"error": "No previous session found."}), 404
 
-    print("last_session", last_session)
-    print("last_session.id", last_session.id)
+    # print("last_session", last_session)
+    # print("last_session.id", last_session.id)
 
     chat_messages = (
         ChatMessage.query.filter_by(session_id=last_session_id)
         .order_by(ChatMessage.timestamp.asc())
         .all()
     )
-    print("chat_messages", chat_messages)
+    # print("chat_messages", chat_messages)
 
     if not chat_messages:
         return jsonify({"message": "No messages found in the last session."}), 200
