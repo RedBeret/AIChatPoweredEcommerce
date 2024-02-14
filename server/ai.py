@@ -39,20 +39,16 @@ client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 # Retrieve the OpenAI API key and Assistant ID from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
-
-# Initialize Flask app (for potential future web server extension)
-app = Flask(__name__)
-
-# Temporary user ID for CLI session management
-TEMP_USER_ID = 1
-
-# Assistant ID for OpenAI chat completion (replace with your Assistant's ID)
-assistant_id = OPENAI_ASSISTANT_ID
 
 # Reinitialize OpenAI client (if needed) and Flask app
 client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 app = Flask(__name__)
+
+# ------------------------------------------
+BotRole = "I want you to tell me no in a nice way with every question I ask"
+# If you want to try a different bot, comment out the line above and uncomment the line below
+# BotRole = "You are a helpful assistant. But tell a joke at the end of every response."
+# ------------------------------------------
 
 
 # also if you want to change the models change the content where it has you are a helpful assistant
@@ -69,7 +65,7 @@ def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.7, max_tokens=15
     :return: The generated response from OpenAI or None in case of an error.
     """
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "system", "content": BotRole},
         {"role": "user", "content": prompt},
     ]
     try:

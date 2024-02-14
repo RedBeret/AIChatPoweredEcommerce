@@ -39,7 +39,7 @@ def seed_database():
 
         # Create fake data for UserAuth
         user_ids = []  # Keep track of user IDs for later use
-        for _ in range(10):
+        for _ in range(3):
             password_hash = bcrypt.generate_password_hash("123456").decode("utf-8")
             user = UserAuth(
                 username=fake.user_name(),
@@ -66,28 +66,32 @@ def seed_database():
 
         db.session.commit()
 
-        # Create fake data for Products
-        product_ids = []  # Keep track of product IDs for later use
-        for _ in range(1):
+        product_ids = []
+        product_names = ["Vision X Pro Max Ultra", "Halo Vision Pro Ultra"]
+        product_descriptions = [
+            "The Vision X Pro Max Ultra represents the pinnacle of smartphone technology, boasting a transparent design that reveals the cutting-edge tech within. Featuring a modular build for easy upgrades and repairs, it sets a new standard for innovation and sustainability in the mobile industry.",
+            "The New Halo Vision Pro Ultra is the latest in our line of cutting-edge smartphones, offering unparalleled performance and design. With its sleek build and advanced features, it's designed to push the boundaries of what a smartphone can do.",
+        ]
+        product_prices = [100000, 150000]
+        product_images = ["img/visionxphone.png", "img/visionxhalo.png"]
+        product_image_alts = ["Vision X Pro Max Ultra", "Halo Vision Pro Ultra"]
+
+        for i in range(len(product_names)):
             product = Product(
-                name="Vision X Pro Max Ultra",
-                description="The Vision X Pro Max Ultra represents the pinnacle of smartphone technology, "
-                "boasting a transparent design that reveals the cutting-edge tech within. "
-                "Featuring a modular build for easy upgrades and repairs, "
-                "it sets a new standard for innovation and sustainability in the mobile industry.",
+                name=product_names[i],
+                description=product_descriptions[i],
                 item_quantity=100,
-                price=100000,  # Price in cents
-                image_path="img/visionxphone.png",
-                imageAlt="Vision X Pro Max Ultra",
+                price=product_prices[i],
+                image_path=product_images[i],
+                imageAlt=product_image_alts[i],
             )
             db.session.add(product)
-            db.session.flush()  # Flush to assign an ID to the product object
+            db.session.flush()
             product_ids.append(product.id)
-
         db.session.commit()
 
         # Create fake data for Colors
-        color_ids = []  # Keep track of color IDs for later use
+        color_ids = []
         colors = ["Black", "Transparent"]
         for color_name in colors:
             color = Color(name=color_name)
@@ -107,7 +111,7 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for ShippingInfo
-        for _ in range(50):
+        for _ in range(3):
             shipping_info = ShippingInfo(
                 address_line1=fake.street_address(),
                 address_line2=fake.secondary_address(),
@@ -121,7 +125,7 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for Orders and OrderDetails
-        for _ in range(5):
+        for _ in range(2):
             order = Order(
                 user_id=random.choice(user_ids),
                 shipping_info_id=random.choice(user_ids),
@@ -142,7 +146,7 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for ChatMessages
-        for _ in range(20):
+        for _ in range(0):
             chat_message = ChatMessage(
                 user_id=random.choice(user_ids),
                 message=fake.sentence(),
