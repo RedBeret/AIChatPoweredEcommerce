@@ -21,15 +21,16 @@ load_dotenv()
 
 app = Flask(
     __name__,
-    static_url_path="",
+    static_url_path="/static"
     static_folder="../client/build",
     template_folder="../client/build",
 )
 
 
-@app.route("/images/<path:filename>")
-def custom_images(filename):
-    return send_from_directory("server/static/img", filename)
+@app.route('/images/<path:filename>')
+def custom_static(filename):
+    return send_from_directory('server/static/assets/img', filename)
+
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
