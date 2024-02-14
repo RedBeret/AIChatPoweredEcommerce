@@ -134,7 +134,7 @@ class ShippingInfo(db.Model, SerializerMixin):
     state = db.Column(db.String(255), nullable=False)
     postal_code = db.Column(db.String(20), nullable=False)
     country = db.Column(db.String(255), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
+    phone_number = db.Column(db.String(50), nullable=False)
 
     @validates("postal_code")
     def validate_postal_code(self, key, code):

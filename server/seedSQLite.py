@@ -33,10 +33,13 @@ bcrypt = Bcrypt(app)
 
 def seed_database():
     with app.app_context():
+        # Drop all tables and recreate them
+        db.drop_all()
         db.create_all()
+
         # Create fake data for UserAuth
         user_ids = []  # Keep track of user IDs for later use
-        for _ in range(5):
+        for _ in range(10):
             password_hash = bcrypt.generate_password_hash("123456").decode("utf-8")
             user = UserAuth(
                 username=fake.user_name(),
@@ -84,18 +87,15 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for Colors
-        color_names = ["Black", "Transparent"]
-        existing_colors = Color.query.with_entities(Color.name).all()
-        existing_color_names = {color.name for color in existing_colors}
-
-        for color_name in color_names:
-            if color_name not in existing_color_names:
-                color = Color(name=color_name)
-                db.session.add(color)
-                db.session.flush()
+        color_ids = []  # Keep track of color IDs for later use
+        colors = ["Black", "Transparent"]
+        for color_name in colors:
+            color = Color(name=color_name)
+            db.session.add(color)
+            db.session.flush()
+            color_ids.append(color.id)
 
         db.session.commit()
-        color_ids = [color.id for color in Color.query.all()]
 
         # Create fake data for ProductColor relationships
         for product_id in product_ids:
@@ -107,7 +107,7 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for ShippingInfo
-        for _ in range(3):
+        for _ in range(50):
             shipping_info = ShippingInfo(
                 address_line1=fake.street_address(),
                 address_line2=fake.secondary_address(),
@@ -120,15 +120,11 @@ def seed_database():
             db.session.add(shipping_info)
         db.session.commit()
 
-        shipping_info_ids = [info.id for info in ShippingInfo.query.all()]
-
         # Create fake data for Orders and OrderDetails
-        for _ in range(2):
-            shipping_info_id = random.choice(shipping_info_ids)
-
+        for _ in range(5):
             order = Order(
                 user_id=random.choice(user_ids),
-                shipping_info_id=shipping_info_id,
+                shipping_info_id=random.choice(user_ids),
                 confirmation_num=str(uuid.uuid4()),
             )
             db.session.add(order)
@@ -146,19 +142,14 @@ def seed_database():
         db.session.commit()
 
         # Create fake data for ChatMessages
-        for _ in range(2):
-            user_id = random.choice(user_ids)
-            user_sessions = UserSession.query.filter_by(user_id=user_id).all()
-            if user_sessions:
-                session_id = random.choice(user_sessions).id
-                chat_message = ChatMessage(
-                    user_id=user_id,
-                    session_id=session_id,
-                    message=fake.sentence(),
-                    response=fake.sentence(),
-                    timestamp=datetime.utcnow(),
-                )
-                db.session.add(chat_message)
+        for _ in range(20):
+            chat_message = ChatMessage(
+                user_id=random.choice(user_ids),
+                message=fake.sentence(),
+                response=fake.sentence(),
+                timestamp=datetime.utcnow(),
+            )
+            db.session.add(chat_message)
 
         db.session.commit()
 

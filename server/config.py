@@ -4,7 +4,7 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, render_template, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
@@ -19,7 +19,17 @@ from flask_session import Session
 load_dotenv()
 
 
-app = Flask(__name__, static_folder="./static", static_url_path="/static")
+app = Flask(
+    __name__,
+    static_url_path="",
+    static_folder="../client/build",
+    template_folder="../client/build",
+)
+
+
+@app.route("/static/<path:filename>")
+def custom_static(filename):
+    return send_from_directory("./static", filename)
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -33,7 +43,13 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 Session(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI", "sqlite:///app.db")
+# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI", "sqlite:///app.db")
+# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+if os.environ.get("RENDER"):
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.json.compact = False
 CORS(app)

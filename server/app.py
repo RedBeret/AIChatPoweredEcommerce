@@ -15,6 +15,7 @@ import logging
 import os
 
 import bcrypt
+from flask import Flask, render_template, send_from_directory
 from openai import OpenAI
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
@@ -45,13 +46,23 @@ from sqlalchemy.exc import IntegrityError
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
-    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
+    "DATABASE_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
 )
 
+app = Flask(
+    __name__, static_folder="../client/build", template_folder="../client/build"
+)
 
-app.secret_key = os.environ.get("SECRET_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
+SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
+DATABASE_URI = os.getenv("DATABASE_URI")
+
+app.config.update(
+    SECRET_KEY=SECRET_KEY,
+    SESSION_TYPE="filesystem",
+    SQLALCHEMY_DATABASE_URI=DATABASE_URI,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+)
 
 bcrypt = Bcrypt(app)
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
@@ -60,12 +71,15 @@ script_dir = Path(__file__).parent
 file_path = script_dir / "data" / "support_guide.txt"
 
 
-@app.route("/")
-def index():
-    """
-    Root endpoint to confirm the application is running.
-    """
-    return "<h1>ChatPoweredEcommerce</h1>"
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + "/" + path):
+        return send_from_directory(app.static_folder, path)
+    elif path.startswith("static/"):
+        return send_from_directory("./static", path[len("static/") :])
+    else:
+        return render_template("index.html")
 
 
 # User Authentication Resources
