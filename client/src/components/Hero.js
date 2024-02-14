@@ -54,14 +54,14 @@ function HeroSection() {
                                         className="w-full py-3 px-6 text-center rounded-full transition duration-300 bg-gray-900 dark:bg-gray-700 hover:bg-cyan-500 active:bg-cyan-600 focus:bg-cyan-800 sm:w-max mb-4 text-white text-sm"
                                         title="Buy now"
                                     >
-                                        Buy now
+                                        Buy Max Version
                                     </Link>
                                     <Link
-                                        to="/productdetail/1"
+                                        to="/productdetail/2"
                                         className="w-full py-3 px-6 text-center rounded-full transition border border-gray-200 dark:border-gray-700 sm:w-max mb-4 text-gray-800 text-sm dark:text-white"
                                         title="View phone"
                                     >
-                                        View phone
+                                        Buy Halo Version
                                     </Link>
                                 </div>
                             </div>

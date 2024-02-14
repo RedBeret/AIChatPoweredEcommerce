@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { registerUser } from "../store/actions/authActions";
 
 const Checkout = () => {
-    const { cartItems } = useCartContext();
+    const { cartItems, clearCart } = useCartContext();
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
@@ -143,6 +143,7 @@ const Checkout = () => {
 
             console.log("Order created successfully:", orderResponse.payload);
             setSuccess("Checkout successful!");
+            clearCart();
             const confirmationNumber =
                 orderResponse.payload.order.confirmation_num;
             history.push("/confirmation", { confirmationNumber });

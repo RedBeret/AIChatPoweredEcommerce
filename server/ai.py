@@ -41,7 +41,6 @@ client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Reinitialize OpenAI client (if needed) and Flask app
-client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 app = Flask(__name__)
 
 # ------------------------------------------

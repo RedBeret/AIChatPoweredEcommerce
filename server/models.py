@@ -460,17 +460,19 @@ class ChatMessage(db.Model, SerializerMixin):
 class AITrainingData(db.Model, SerializerMixin):
     """
     Represents AI training data points, storing the data used for AI model training along with timestamps.
+    Now includes separate fields for message and response to enhance data handling for AI training.
 
     Attributes:
     - id: Primary key; unique identifier for each training data entry.
-    - data: The training data content, stored as text.
+    - message: The user's message, stored as text.
+    - response: The AI's response, stored as text.
     - created_at: Timestamp marking when the training data was created or recorded.
     """
 
     __tablename__ = "ai_training_data"
-
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    response = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):

@@ -30,7 +30,8 @@ const Confirmation = () => {
                         <p className="text-center text-gray-600 mb-4">
                             We appreciate your order, we're currently processing
                             it. So hang tight and we'll send you confirmation
-                            very soon!
+                            very soon! Note: this is not a real order and this
+                            website is a educational project.
                         </p>
                     </div>
                     <div className="p-4 bg-gray-100 rounded-b-lg">

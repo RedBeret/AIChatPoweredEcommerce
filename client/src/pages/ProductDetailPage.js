@@ -78,7 +78,7 @@ export default function ProductDetail() {
                                 ))}
                             </div>
                             <p className="text-sm font-medium text-gray-600 mt-1">
-                                Rated 5 stars by World Class Watch Raters
+                                Rated 5 stars by Fake Phone Reports
                             </p>
                         </div>
 
