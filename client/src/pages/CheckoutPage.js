@@ -180,7 +180,7 @@ const Checkout = () => {
                         <div className="flex items-center">
                             <img
                                 className="w-16 h-16 object-cover rounded mr-4"
-                                src={`/static/${item.image_path}`}
+                                src={`${process.env.PUBLIC_URL}/${product.image_path}`}
                                 alt={item.name}
                             />
                             <div>
