@@ -14,8 +14,8 @@ export default function TechSupport() {
 
     const handleContinueLastChat = () => {
         dispatch(fetchMessages());
-        console.log("Fetching messages...");
-        console.log("Current chat messages on Tech:", messages);
+        // console.log("Fetching messages...");
+        // console.log("Current chat messages on Tech:", messages);
     };
 
     const handleSendMessage = (e) => {
