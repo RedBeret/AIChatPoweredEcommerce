@@ -178,7 +178,7 @@ class UserAuthResource(Resource):
                     {"error": "Username and password are required"}, 400
                 )
 
-            username = data["username"]
+            username = data["username"].lower()
             password = data["password"]
 
             user = UserAuth.query.filter_by(username=username).first()
@@ -198,7 +198,8 @@ class UserAuthResource(Resource):
     def patch(self):
         """Updates a user's password after verifying the current password."""
         data = request.get_json()
-        user = UserAuth.query.filter_by(username=data["username"]).first()
+        username = data["username"].lower()
+        user = UserAuth.query.filter_by(username=username).first()
         if user and bcrypt.check_password_hash(user.password_hash, data["password"]):
             user.password_hash = bcrypt.generate_password_hash(
                 data["newPassword"]

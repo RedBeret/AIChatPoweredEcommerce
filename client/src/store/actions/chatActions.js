@@ -56,32 +56,32 @@ export const sendMessage = (messageContent) => async (dispatch) => {
 
 export const fetchMessages = () => async (dispatch) => {
     dispatch({ type: FETCH_LAST_SESSION_MESSAGES_START });
-    console.log("Fetching messages...");
+    // console.log("Fetching messages...");
     try {
         const response = await fetch("/api/continue_last_conversation", {
             method: "GET",
             credentials: "include",
         });
-        console.log("Response received:", response);
+        // console.log("Response received:", response);
         if (!response.ok) {
             throw new Error("Failed to fetch messages");
         }
         const data = await response.json();
-        console.log("Data received:", data);
+        // console.log("Data received:", data);
 
         const messages = data.messages.map((msg, index) => ({
             id: index,
             sender: msg.sender,
             text: msg.text,
         }));
-        console.log("Messages extracted:", messages);
+        // console.log("Messages extracted:", messages);
 
         dispatch({
             type: SET_MESSAGES,
             payload: messages,
         });
-        console.log("Messages dispatched to store");
-        console.log("Current chat messages on Tech:", messages);
+        // console.log("Messages dispatched to store");
+        // console.log("Current chat messages on Tech:", messages);
     } catch (error) {
         console.error("Fetch error:", error);
         dispatch({

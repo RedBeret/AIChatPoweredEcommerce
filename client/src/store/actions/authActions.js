@@ -76,7 +76,7 @@ export const registerUser =
                 body: JSON.stringify(userData),
             });
             const data = await response.json();
-            console.log("Register User Response Data:", data);
+            // console.log("Register User Response Data:", data);
             if (!response.ok) {
                 throw new Error(data.error || "Signup failed");
             }
