@@ -9,10 +9,12 @@ export const CartWrapper = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const user = useSelector((state) => state.auth.user);
 
+    // Function to remove an item from the cart
     const removeFromCart = (productId) => {
         setCartItems(cartItems.filter((item) => item.id !== productId));
     };
 
+    // Function to update the quantity of an item in the cart
     const updateQuantity = (productId, newQuantity) => {
         setCartItems((currentItems) => {
             return currentItems.map((item) => {
@@ -24,6 +26,7 @@ export const CartWrapper = ({ children }) => {
         });
     };
 
+    // Function to add an item to the cart
     const addToCart = (product, color, quantity = 1) => {
         setCartItems((currentItems) => {
             const existingProductIndex = currentItems.findIndex(
@@ -53,10 +56,18 @@ export const CartWrapper = ({ children }) => {
             }
         });
     };
-
+    const clearCart = () => {
+        setCartItems([]);
+    };
     return (
         <CartContext.Provider
-            value={{ cartItems, addToCart, updateQuantity, removeFromCart }}
+            value={{
+                cartItems,
+                addToCart,
+                updateQuantity,
+                removeFromCart,
+                clearCart,
+            }}
         >
             {children}
         </CartContext.Provider>
