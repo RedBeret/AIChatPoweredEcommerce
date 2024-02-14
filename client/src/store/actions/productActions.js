@@ -25,7 +25,7 @@ export const fetchProductsFailure = (error) => ({
 export const fetchProducts = () => async (dispatch) => {
     dispatch(fetchProductsStart());
     try {
-        const response = await fetch("/product");
+        const response = await fetch("/api/product");
         if (!response.ok) {
             throw new Error(`Error: ${response.status} ${response.statusText}`);
         }
@@ -53,7 +53,7 @@ export const fetchProductFailure = (error) => ({
 export const fetchProduct = (productId) => async (dispatch) => {
     dispatch(fetchProductStart());
     try {
-        const response = await fetch(`/product/${productId}`);
+        const response = await fetch(`/api/product/${productId}`);
         if (!response.ok) {
             throw new Error(`Error: ${response.status} ${response.statusText}`);
         }

@@ -21,7 +21,7 @@ export const sendMessage = (messageContent) => async (dispatch) => {
             payload: messageContent,
         });
 
-        const response = await fetch("/chat_messages", {
+        const response = await fetch("/api/chat_messages", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export const fetchMessages = () => async (dispatch) => {
     dispatch({ type: FETCH_LAST_SESSION_MESSAGES_START });
     console.log("Fetching messages...");
     try {
-        const response = await fetch("/continue_last_conversation", {
+        const response = await fetch("/api/continue_last_conversation", {
             method: "GET",
             credentials: "include",
         });

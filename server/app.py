@@ -756,7 +756,7 @@ def get_completion(
     return None
 
 
-@app.route("/chat_messages", methods=["POST"])
+@app.route("/api/chat_messages", methods=["POST"])
 def chat():
     """
     Endpoint to handle the posting of new chat messages. Processes the user's message,
@@ -797,7 +797,7 @@ def chat():
         return jsonify({"error": "Failed to get response from AI"}), 500
 
 
-@app.route("/continue_last_conversation", methods=["GET"])
+@app.route("/api/continue_last_conversation", methods=["GET"])
 def continue_last_conversation():
     user_id = session.get("user_id")
     if not user_id:
@@ -847,19 +847,19 @@ def continue_last_conversation():
 # supporting functionalities like user authentication, product management, and order processing.
 
 # User Authentication Endpoints
-api.add_resource(UserLoginResource, "/login")
-api.add_resource(UserLogoutResource, "/logout")
-api.add_resource(UserAuthResource, "/user_auth")
+api.add_resource(UserLoginResource, "/api/login")
+api.add_resource(UserLogoutResource, "/api/logout")
+api.add_resource(UserAuthResource, "/api/user_auth")
 # Shipping Information Endpoints
-api.add_resource(ShippingInfoResource, "/shipping_info")
+api.add_resource(ShippingInfoResource, "/api/shipping_info")
 # Product Management Endpoints
-api.add_resource(ProductResource, "/product", "/product/<int:product_id>")
+api.add_resource(ProductResource, "/api/product", "/api/product/<int:product_id>")
 # Color Management Endpoints
-api.add_resource(ColorResource, "/colors", "/colors/<int:color_id>")
+api.add_resource(ColorResource, "/api/colors", "/api/colors/<int:color_id>")
 # Order Management Endpoints
-api.add_resource(OrderResource, "/orders", "/orders/<int:order_id>")
+api.add_resource(OrderResource, "/api/orders", "/api/orders/<int:order_id>")
 # Session Management Endpoint
-api.add_resource(SessionCheckResource, "/check_session")
+api.add_resource(SessionCheckResource, "/api/check_session")
 
 
 if __name__ == "__main__":

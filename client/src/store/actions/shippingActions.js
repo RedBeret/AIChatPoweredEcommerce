@@ -19,7 +19,7 @@ export const createShippingInfoFail = (error) => ({
 export const createShippingInfo = (shippingData) => async (dispatch) => {
     dispatch(createShippingInfoStart());
     try {
-        const response = await fetch("/shipping_info", {
+        const response = await fetch("/api/shipping_info", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(shippingData),
