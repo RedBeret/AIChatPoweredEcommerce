@@ -29,7 +29,7 @@ app = Flask(
 
 @app.route("/images/<path:filename>")
 def custom_images(filename):
-    return send_from_directory("server/static/assets/", filename)
+    return send_from_directory("server/static/img", filename)
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
