@@ -57,11 +57,11 @@ function HeroSection() {
                                         Buy now
                                     </Link>
                                     <Link
-                                        to="/productdetail/1"
+                                        to="/productdetail/2"
                                         className="w-full py-3 px-6 text-center rounded-full transition border border-gray-200 dark:border-gray-700 sm:w-max mb-4 text-gray-800 text-sm dark:text-white"
-                                        title="View phone"
+                                        title="Buy Halo"
                                     >
-                                        View phone
+                                        Previous Model
                                     </Link>
                                 </div>
                             </div>
