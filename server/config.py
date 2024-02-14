@@ -44,11 +44,11 @@ app.config["SESSION_USE_SIGNER"] = True
 Session(app)
 
 # app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI", "sqlite:///app.db")
-# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
-if os.environ.get("RENDER"):
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+# if os.environ.get("RENDER"):
+#     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
+# else:
+#     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.json.compact = False

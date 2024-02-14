@@ -49,10 +49,6 @@ DATABASE = os.environ.get(
     "DATABASE_URI", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'app.db')}"
 )
 
-app = Flask(
-    __name__, static_folder="../client/build", template_folder="../client/build"
-)
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
 DATABASE_URI = os.getenv("DATABASE_URI")
