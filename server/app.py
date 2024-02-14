@@ -638,7 +638,7 @@ class OrderResource(Resource):
 
         except Exception as e:
             db.session.rollback()
-            # print("Error:", str(e))
+            print("Error:", str(e))
             return make_response({"error": "An unexpected error occurred"}, 500)
 
     def delete(self, order_id):
@@ -689,9 +689,9 @@ def read_support_guide(file_path=file_path):
             support_guide = file.read()
         return support_guide
     except FileNotFoundError:
-        # print(f"The file {file_path} was not found.")
+        print(f"The file {file_path} was not found.")
     except Exception as e:
-        # print(f"An error occurred while reading the file: {e}")
+        print(f"An error occurred while reading the file: {e}")
     return ""
 
 
@@ -739,7 +739,7 @@ def get_completion(
         if response.choices and response.choices[0].message:
             return response.choices[0].message.content.strip()
     except Exception as e:
-        # print(f"Error: {e}")
+        print(f"Error: {e}")
     return None
 
 
@@ -795,7 +795,7 @@ def continue_last_conversation():
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "User not logged in."}), 401
-    # print("user_id", user_id)
+    print("user_id", user_id)
 
     last_session_id = (
         db.session.query(ChatMessage.session_id)
@@ -813,15 +813,15 @@ def continue_last_conversation():
     if not last_session:
         return jsonify({"error": "No previous session found."}), 404
 
-    # print("last_session", last_session)
-    # print("last_session.id", last_session.id)
+    print("last_session", last_session)
+    print("last_session.id", last_session.id)
 
     chat_messages = (
         ChatMessage.query.filter_by(session_id=last_session_id)
         .order_by(ChatMessage.timestamp.asc())
         .all()
     )
-    # print("chat_messages", chat_messages)
+    print("chat_messages", chat_messages)
 
     if not chat_messages:
         return jsonify({"message": "No messages found in the last session."}), 200
