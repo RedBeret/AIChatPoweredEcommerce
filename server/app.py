@@ -69,7 +69,7 @@ file_path = script_dir / "data" / "support_guide.txt"
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
-def serve(path):
+def catch_all(path):
     if path != "" and os.path.exists(app.static_folder + "/" + path):
         return send_from_directory(app.static_folder, path)
     else:
