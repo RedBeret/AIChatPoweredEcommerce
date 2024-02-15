@@ -124,9 +124,6 @@ These enhancements and organizational changes are designed to prepare AiChatPowe
 ### Integrating Diverse Technologies
 - **Challenge of Integration**: One of the primary lessons from this project was navigating the complexities of integrating diverse technologies such as React, Flask, SQLite, and AI platforms like Voiceflow and OpenAI. Learning to ensure seamless communication between the frontend and backend, and between our application and third-party AI services, required meticulous attention to detail and a deep understanding of each technology's capabilities and limitations as well as their beta technology implementation limits.
 
-### Security and Data Protection
-- **Security First Approach**: Implementing bcrypt for hashing and managing user sessions taught me the importance of a security-first approach, especially in handling sensitive user data. It underscored the need for rigorous testing and validation mechanisms to safeguard against vulnerabilities. I attempted JWT token session but troubleshooting as I developed became an issue in my two week limit for this project thus a future enhancement and just did Flask Session, Cookies and bcrypt.
-
 ### Enhanced AI Chat Support with Custom Workarounds
 - **AI Customization and Training**: Developing the AI chat support for AiChatPoweredEcommerce presented unique challenges, particularly in training the models to understand and respond to user queries with high accuracy. A critical lesson learned was the importance of continuous training and implementing feedback loops. These strategies are essential in refining the AI's performance, enabling the chatbot to effectively handle a diverse array of customer service scenarios.
 
@@ -136,12 +133,6 @@ This workaround significantly improved the chatbot's functionality, making it mo
 
 ### Frontend Performance and Usability
 - **Optimizing User Experience**: The project reinforced the value of a responsive and intuitive user interface. Leveraging React's capabilities for dynamic updates and Tailwind CSS for styling, we learned how critical frontend performance and design are in retaining user engagement and satisfaction.
-
-### Scalability and Maintainability
-- **Code Organization for Future Growth**: As the project evolved, it became clear that maintaining a scalable and manageable codebase was crucial. The decision to modularize React components, for instance, was driven by the need to facilitate future developments and enhancements without compromising on code quality or introducing technical debt.
-
-### Collaboration and Agile Development
-- **Teamwork and Agile Practices**: The development process was a practical lesson in the importance of teamwork, effective communication, and agile practices. Regular stand-ups, code reviews, and adaptive planning helped us navigate challenges and pivot as required, underscoring the agile methodology's value in managing complex projects.
 
 ### Continuous Learning
 - **Embrace Continuous Learning**: Lastly, this project was a testament to the continuous learning journey in software development. Whether it was a new programming pattern, a library, or an AI technology, the project encouraged an ethos of curiosity and improvement, reminding us that the landscape of technology is ever-evolving, and so must we.
