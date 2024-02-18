@@ -706,7 +706,7 @@ def read_support_guide(file_path=file_path):
 
 
 def get_completion(
-    user_id, user_message, model="gpt-4", temperature=0.7, max_tokens=500
+    user_id, user_message, model="gpt-3.5-turbo", temperature=0.7, max_tokens=150
 ):
     """
     Fetches AI-generated responses based on the user's message and preceding chat context.
