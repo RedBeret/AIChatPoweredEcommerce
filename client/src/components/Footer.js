@@ -4,26 +4,6 @@ import logo from "../assets/img/vision_x_logo.png";
 import { Link } from "react-router-dom";
 
 export default function Footer() {
-    useEffect(() => {
-        const loadVoiceflowChatWidget = () => {
-            const script = document.createElement("script");
-            script.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
-            script.type = "module";
-            script.async = true;
-
-            script.onload = () => {
-                window.voiceflow.chat.load({
-                    verify: { projectID: "65c11fbbb1559696681be59a" },
-                    url: "https://general-runtime.voiceflow.com",
-                    versionID: "production",
-                });
-            };
-
-            document.body.appendChild(script);
-        };
-
-        loadVoiceflowChatWidget();
-    }, []);
     return (
         <footer className="bg-coolGray dark:bg-coolGray">
             <div className="container px-6 py-12 mx-auto">
