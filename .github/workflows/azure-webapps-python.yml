@@ -1,86 +1,362 @@
-# This workflow will build and push a Python application to an Azure Web App when a commit is pushed to your default branch.
-#
-# This workflow assumes you have already created the target Azure App Service web app.
-# For instructions see https://docs.microsoft.com/en-us/azure/app-service/quickstart-python?tabs=bash&pivots=python-framework-flask
-#
-# To configure this workflow:
-#
-# 1. Download the Publish Profile for your Azure Web App. You can download this file from the Overview page of your Web App in the Azure Portal.
-#    For more information: https://docs.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=applevel#generate-deployment-credentials
-#
-# 2. Create a secret in your repository named AZURE_WEBAPP_PUBLISH_PROFILE, paste the publish profile contents as the value of the secret.
-#    For instructions on obtaining the publish profile see: https://docs.microsoft.com/azure/app-service/deploy-github-actions#configure-the-github-secret
-#
-# 3. Change the value for the AZURE_WEBAPP_NAME. Optionally, change the PYTHON_VERSION environment variables below.
-#
-# For more information on GitHub Actions for Azure: https://github.com/Azure/Actions
-# For more information on the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
-
-name: Build and deploy Python app to Azure Web App
-
-env:
-  AZURE_WEBAPP_NAME: your-app-name  # set this to the name of your Azure Web App
-  PYTHON_VERSION: '3.8'              # set this to the Python version to use
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python version
-        uses: actions/setup-python@v3.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v3
-        with:
-          name: python-app
-          path: |
-            .
-            !venv/
-
-  deploy:
-    permissions:
-      contents: none
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Development'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v3
-        with:
-          name: python-app
-          path: .
-
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "type": "String"
+        },
+        "resourceGroupName": {
+            "type": "String"
+        },
+        "name": {
+            "type": "String"
+        },
+        "location": {
+            "type": "String"
+        },
+        "hostingPlanName": {
+            "type": "String"
+        },
+        "serverFarmResourceGroup": {
+            "type": "String"
+        },
+        "alwaysOn": {
+            "type": "Bool"
+        },
+        "ftpsState": {
+            "type": "String"
+        },
+        "sku": {
+            "type": "String"
+        },
+        "skuCode": {
+            "type": "String"
+        },
+        "workerSize": {
+            "type": "String"
+        },
+        "workerSizeId": {
+            "type": "String"
+        },
+        "numberOfWorkers": {
+            "type": "String"
+        },
+        "linuxFxVersion": {
+            "type": "String"
+        },
+        "repoUrl": {
+            "type": "String"
+        },
+        "branch": {
+            "type": "String"
+        },
+        "privateDnsZoneName": {
+            "defaultValue": "[format('dnszone-{0}', uniqueString(deployment().name))]",
+            "type": "String"
+        },
+        "postgreSqlServerName": {
+            "defaultValue": "[format('server-{0}', uniqueString(deployment().name))]",
+            "type": "String"
+        },
+        "postgreSqlServerAdminUsername": {
+            "type": "String"
+        },
+        "postgreSqlServerAdminPwd": {
+            "type": "SecureString"
+        },
+        "postgresqlDatabaseSku": {
+            "type": "String"
+        },
+        "postgresqlDatabaseTier": {
+            "type": "String"
+        },
+        "postgreSqlServerTags": {
+            "defaultValue": {},
+            "type": "Object"
+        },
+        "postgreSqlDatabaseName": {
+            "defaultValue": "[format('db-{0}', uniqueString(deployment().name))]",
+            "type": "String"
+        },
+        "postgreSqlDatabaseTags": {
+            "defaultValue": {},
+            "type": "Object"
+        },
+        "outboundSubnetName": {
+            "defaultValue": "[format('subnet-{0}', uniqueString(deployment().name))]",
+            "type": "String"
+        },
+        "outboundSubnetAddressPrefix": {
+            "type": "String"
+        },
+        "siteConfigName": {
+            "defaultValue": "[format('sc{0}', uniqueString(resourceGroup().id))]",
+            "type": "String"
+        },
+        "vnetName": {
+            "type": "String"
+        }
+    },
+    "variables": {
+        "inboundSubnetDeployment": "inboundSubnetDeployment",
+        "outboundSubnetDeployment": "outboundSubnetDeployment",
+        "databaseDeployment": "databaseDeployment",
+        "serviceConnectorDeployment": "serviceConnectorDeployment"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-03-01",
+            "name": "[parameters('name')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "[variables('outboundSubnetDeployment')]"
+            ],
+            "properties": {
+                "name": "[parameters('name')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                            "value": "1"
+                        }
+                    ],
+                    "linuxFxVersion": "[parameters('linuxFxVersion')]",
+                    "alwaysOn": "[parameters('alwaysOn')]",
+                    "ftpsState": "[parameters('ftpsState')]"
+                },
+                "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "clientAffinityEnabled": false,
+                "virtualNetworkSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-bzffkgln', 'subnet-knuwptob')]",
+                "httpsOnly": true,
+                "publicNetworkAccess": "Enabled",
+                "vnetRouteAllEnabled": true
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+                    "apiVersion": "2022-09-01",
+                    "name": "[concat(parameters('name'), '/scm')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('name'))]"
+                    ],
+                    "properties": {
+                        "allow": true
+                    }
+                },
+                {
+                    "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+                    "apiVersion": "2022-09-01",
+                    "name": "[concat(parameters('name'), '/ftp')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('name'))]"
+                    ],
+                    "properties": {
+                        "allow": true
+                    }
+                },
+                {
+                    "type": "sourcecontrols",
+                    "apiVersion": "2020-12-01",
+                    "name": "web",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('name'))]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('repoUrl')]",
+                        "branch": "[parameters('branch')]",
+                        "IsManualIntegration": false,
+                        "deploymentRollbackEnabled": false,
+                        "isMercurial": false,
+                        "isGitHubAction": true,
+                        "gitHubActionConfiguration": {
+                            "generateWorkflowFile": true,
+                            "workflowSettings": {
+                                "appType": "webapp",
+                                "publishType": "code",
+                                "os": "linux",
+                                "runtimeStack": "python",
+                                "workflowApiVersion": "2020-12-01",
+                                "slotName": "production",
+                                "variables": {
+                                    "runtimeVersion": "3.8",
+                                    "resourceGroup": "aichatpoweredstore_group"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('hostingPlanName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [],
+            "sku": {
+                "Tier": "[parameters('sku')]",
+                "Name": "[parameters('skuCode')]"
+            },
+            "kind": "linux",
+            "properties": {
+                "name": "[parameters('hostingPlanName')]",
+                "workerSize": "[parameters('workerSize')]",
+                "workerSizeId": "[parameters('workerSizeId')]",
+                "numberOfWorkers": "[parameters('numberOfWorkers')]",
+                "reserved": true,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-07-01",
+            "name": "vnet-bzffkgln",
+            "location": "East US",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": []
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-07-01",
+            "name": "[variables('outboundSubnetDeployment')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-bzffkgln')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2020-07-01",
+                            "name": "vnet-bzffkgln/subnet-knuwptob",
+                            "properties": {
+                                "delegations": [
+                                    {
+                                        "name": "delegation",
+                                        "properties": {
+                                            "serviceName": "Microsoft.Web/serverfarms"
+                                        }
+                                    }
+                                ],
+                                "serviceEndpoints": [
+                                    {
+                                        "service": "Microsoft.Storage"
+                                    }
+                                ],
+                                "addressPrefix": "10.0.1.0/24"
+                            }
+                        }
+                    ]
+                }
+            },
+            "subscriptionId": "",
+            "resourceGroup": ""
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[parameters('privateDnsZoneName')]",
+            "location": "global",
+            "dependsOn": [],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+            "apiVersion": "2020-11-05-preview",
+            "name": "[parameters('postgreSqlServerName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets' ,parameters('vnetName'), parameters('outboundSubnetName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+            ],
+            "tags": "[parameters('postgreSqlServerTags')]",
+            "sku": {
+                "name": "[parameters('postgresqlDatabaseSku')]",
+                "tier": "[parameters('postgresqlDatabaseTier')]"
+            },
+            "properties": {
+                "administratorLogin": "[parameters('postgreSqlServerAdminUsername')]",
+                "administratorLoginPassword": "[parameters('postgreSqlServerAdminPwd')]",
+                "version": "12",
+                "publicNetworkAccess": "Disabled",
+                "haEnabled": "Disabled",
+                "storageProfile": {
+                    "storageMB": 131072,
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled"
+                },
+                "availabilityZone": "",
+                "DelegatedSubnetArguments": {
+                    "SubnetArmResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('outboundSubnetName'))]"
+                },
+                "PrivateDnsZoneArguments": {
+                    "PrivateDnsZoneArmResourceId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+                }
+            },
+            "resources": [
+                {
+                    "type": "databases",
+                    "apiVersion": "2020-11-05-preview",
+                    "name": "[parameters('postgreSqlDatabaseName')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforPostgreSQL/flexibleServers/', parameters('postgreSqlServerName'))]"
+                    ],
+                    "tags": "[parameters('postgreSqlDatabaseTags')]",
+                    "properties": {
+                        "charset": "utf8",
+                        "collation": "en_US.utf8"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-07-01",
+            "name": "[concat(parameters('vnetName'), '/', parameters('outboundSubnetName'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks', '/', parameters('vnetName'))]"
+            ],
+            "properties": {
+                "delegations": [
+                    {
+                        "name": "dlg-database",
+                        "properties": {
+                            "serviceName": "Microsoft.DBforPostgreSQL/flexibleServers"
+                        }
+                    }
+                ],
+                "serviceEndpoints": [],
+                "addressPrefix": "[parameters('outboundSubnetAddressPrefix')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('name'), '/', parameters('siteConfigName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers/databases', parameters('postgreSqlServerName'), parameters('postgreSqlDatabaseName'))]",
+                "[concat('Microsoft.Web/sites', '/', parameters('name'))]"
+            ],
+            "properties": {
+                "AZURE_POSTGRESQL_CONNECTIONSTRING": {
+                    "value": "[concat('Database=', parameters('postgreSqlDatabaseName'), ';Server=', parameters('postgreSqlServerName'), '.postgres.database.azure.com' , ';User Id=',parameters('postgreSqlServerAdminUsername'), ';Password=', parameters('postgreSqlServerAdminPwd'))]",
+                    "type": "PostgreSQL"
+                }
+            }
+        }
+    ]
+}
