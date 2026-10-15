@@ -79,32 +79,29 @@ class DependencySecurityTests(unittest.TestCase):
 class ApplicationAuthenticationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory(prefix="offline-tests-", dir=ROOT)
-        cls.original_cwd = os.getcwd()
-        os.chdir(cls.temp.name)
-        sys.path.insert(0, str(ROOT / "server"))
-        # Never load a developer .env or connect to a real database/API in these tests.
-        cls.environment = patch.dict(
-            os.environ,
-            {
-                "OPENAI_API_KEY": secrets.token_urlsafe(24),
-                "SECRET_KEY": secrets.token_urlsafe(48),
-                "DATABASE_URI": "sqlite:///:memory:",
-            },
+        temporary_directory = cls.enterClassContext(
+            tempfile.TemporaryDirectory(prefix="offline-tests-", dir=ROOT)
         )
-        cls.environment.start()
-        cls.dotenv = patch("dotenv.load_dotenv", return_value=False)
-        cls.dotenv.start()
+        cls.original_cwd = os.getcwd()
+        cls.addClassCleanup(os.chdir, cls.original_cwd)
+        os.chdir(temporary_directory)
+        sys.path.insert(0, str(ROOT / "server"))
+        cls.addClassCleanup(sys.path.remove, str(ROOT / "server"))
+        # Never load a developer .env or connect to a real database/API in these tests.
+        cls.enterClassContext(
+            patch.dict(
+                os.environ,
+                {
+                    "OPENAI_API_KEY": secrets.token_urlsafe(24),
+                    "SECRET_KEY": secrets.token_urlsafe(48),
+                    "DATABASE_URI": "sqlite:///:memory:",
+                },
+            )
+        )
+        cls.enterClassContext(patch("dotenv.load_dotenv", return_value=False))
         cls.module = importlib.import_module("app")
         cls.app = cls.module.app
         cls.app.config["TESTING"] = True
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.dotenv.stop()
-        cls.environment.stop()
-        os.chdir(cls.original_cwd)
-        cls.temp.cleanup()
 
     def setUp(self):
         with self.app.app_context():
