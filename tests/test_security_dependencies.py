@@ -87,7 +87,7 @@ class ApplicationAuthenticationTests(unittest.TestCase):
         cls.environment = patch.dict(
             os.environ,
             {
-                "OPENAI_API_KEY": "offline-test-placeholder",
+                "OPENAI_API_KEY": secrets.token_urlsafe(24),
                 "SECRET_KEY": secrets.token_urlsafe(48),
                 "DATABASE_URI": "sqlite:///:memory:",
             },
